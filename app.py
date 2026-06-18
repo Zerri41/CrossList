@@ -420,20 +420,11 @@ class AnalyzeRequest(BaseModel):
 @app.post("/api/ai/analyze")
 async def analyze_photo(req: AnalyzeRequest):
     try:
-        from ai_analyze import analyze_photo as _analyze
-        result = await asyncio.get_event_loop().run_in_executor(
-            None, lambda: __import__('asyncio').get_event_loop().run_until_complete(
-                _analyze(
-                    __import__('base64').b64decode(req.image_b64),
-                    req.media_type
-                )
-            )
-        )
-        return result
-    except Exception as e:
-        # Fallback síncrono
-        import anthropic, base64, json, re
-        client = anthropic.Anthropic()
+        import anthropic, base64, json, re, os
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            raise HTTPException(400, "ANTHROPIC_API_KEY não configurada no Render")
+        client = anthropic.Anthropic(api_key=api_key)
         img_bytes = base64.b64decode(req.image_b64)
         b64 = base64.standard_b64encode(img_bytes).decode()
         PROMPT = """És um vendedor experiente em marketplaces portugueses. Analisa esta foto e cria uma listagem completa.
