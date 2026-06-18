@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#0A1628"><link rel="manifest" href="/manifest.json">
+<title>CrossList Pro</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0A1628;--blue:#1A56DB;--lblue:#EBF5FF;--green:#1D9E75;--lgreen:#E1F5EE;--amber:#F59E0B;--red:#EF4444;--gray:#64748B;--lgray:#F1F5F9;--border:#E2E8F0;--text:#1E293B;--text2:#64748B;--bg:#F8FAFC;--card:#fff}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:var(--navy);color:#fff;padding:0 16px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+.logo{font-size:16px;font-weight:700}.logo span{color:#60A5FA}
+.spacer{flex:1}.sdot{width:8px;height:8px;border-radius:50%;background:#6EE7B7}.sdot.off{background:#475569}
+.net-url{font-size:11px;color:#94A3B8;display:none}@media(min-width:600px){.net-url{display:block}}
+.nav{display:flex;background:#fff;border-bottom:1px solid var(--border);overflow-x:auto;position:sticky;top:52px;z-index:99;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nb{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 14px;font-size:11px;color:var(--text2);cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s;flex-shrink:0}
+.nb .ic{font-size:18px}.nb.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:500}
+.main{flex:1;padding:16px;max-width:960px;margin:0 auto;width:100%}
+.page{display:none}.page.active{display:block}
+.kgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
+@media(min-width:600px){.kgrid{grid-template-columns:repeat(4,1fr)}}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.kv{font-size:26px;font-weight:700;color:var(--navy)}.kl{font-size:12px;color:var(--text2);margin-top:2px}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.ch{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.ct{font-size:14px;font-weight:600}.cb{padding:16px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.bp{background:var(--blue);color:#fff}.bp:hover{background:#1344B5}
+.bs{background:var(--lgray);color:var(--text)}.bs:hover{background:var(--border)}
+.bg{background:var(--green);color:#fff}.br{background:var(--red);color:#fff}
+.bai{background:linear-gradient(135deg,#7C3AED,#1A56DB);color:#fff;font-weight:600}
+.bsm{padding:5px 11px;font-size:12px;border-radius:6px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.fg{margin-bottom:12px}.fl{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px;display:block}
+input,select,textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:#fff;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue)}
+textarea{resize:vertical}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bdg{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.bb{background:var(--lblue);color:var(--blue)}.bg2{background:var(--lgreen);color:var(--green)}
+.bgy{background:var(--lgray);color:var(--gray)}.bai2{background:linear-gradient(135deg,#EDE9FE,#DBEAFE);color:#5B21B6}
+.lcard{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start}
+.limg{width:56px;height:56px;border-radius:8px;object-fit:cover;background:var(--lgray);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px}
+.ltitle{font-size:13px;font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lmeta{display:flex;gap:6px;flex-wrap:wrap}.ppills{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.pp{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500}
+.pp-vinted{background:#E1F5EE;color:#0F6E56}.pp-olx{background:#EEEDFE;color:#3C3489}
+.pp-wallapop{background:#E0FAF7;color:#085041}.pp-ebay{background:#FCEBEB;color:#791F1F}
+.pp-facebook{background:#E6F1FB;color:#185FA5}.pp-custojusto{background:#FAECE7;color:#712B13}
+.pp-segunda{background:#FFFBEB;color:#633806}
+/* Photo drop */
+.pdrop{border:2px dashed var(--border);border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--lgray)}
+.pdrop:hover,.pdrop.drag{border-color:var(--blue);background:var(--lblue)}
+.pdrop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.pprev{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-top:12px}
+.pthumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden}
+.pthumb img{width:100%;height:100%;object-fit:cover}
+.pthumb .del{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
+/* AI panel */
+.aipanel{background:linear-gradient(135deg,#F5F3FF,#EFF6FF);border:1px solid #C4B5FD;border-radius:12px;padding:16px;margin-bottom:16px}
+.aihook{font-size:15px;font-weight:600;color:var(--navy);padding:10px 12px;background:#fff;border-radius:8px;border-left:3px solid var(--blue);margin:8px 0}
+.ainote{font-size:12px;color:#5B21B6;background:#EDE9FE;border-radius:6px;padding:8px 10px;margin-top:6px}
+/* Toggle */
+.pltog{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.pltog:last-child{border-bottom:none}
+.tgl{width:38px;height:22px;border-radius:11px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.tgl.on{background:var(--green)}
+.tgl::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tgl.on::after{transform:translateX(16px)}
+.pinfo{flex:1}.pname{font-size:13px;font-weight:500}.ptype{font-size:11px;color:var(--text2)}
+/* Feed */
+.fitem{display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);animation:si .2s ease;cursor:pointer}
+.fitem:hover{background:var(--lgray)}.fitem:last-child{border-bottom:none}
+@keyframes si{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.fph{width:42px;height:42px;border-radius:6px;object-fit:cover;background:var(--lgray);flex-shrink:0}
+.fpr{font-size:14px;font-weight:700;color:var(--green);flex-shrink:0}
+.mitem{display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer}
+.mitem:hover{background:var(--lgray)}
+.mph{width:38px;height:38px;border-radius:6px;object-fit:cover;background:var(--lgray);flex-shrink:0}
+.empty{text-align:center;padding:48px 20px;color:var(--text2)}.eic{font-size:36px;margin-bottom:10px}
+/* Desc tabs */
+.dtabs{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}
+.dtab{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);cursor:pointer;background:none;color:var(--text2);transition:all .15s}
+.dtab.active{background:var(--lblue);color:var(--blue);border-color:var(--blue);font-weight:500}
+/* Tags */
+.twrap{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid var(--border);border-radius:8px;min-height:40px;cursor:text;background:#fff}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:var(--lblue);color:var(--blue);border-radius:20px;font-size:12px}
+.tag button{background:none;border:none;cursor:pointer;color:var(--blue);font-size:14px;line-height:1;padding:0}
+.tin{border:none;outline:none;font-size:12px;min-width:80px;flex:1;padding:0}
+/* Alert */
+.alert{padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:12px;line-height:1.5}
+.ab{background:var(--lblue);color:var(--blue)}.ag{background:var(--lgreen);color:var(--green)}
+.aai{background:linear-gradient(135deg,#F5F3FF,#EFF6FF);color:#5B21B6;border:1px solid #DDD6FE}
+/* Spinner */
+.sp{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px}
+.spd{border:2px solid var(--border);border-top-color:var(--blue)}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Live bar */
+.livebar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--navy);color:#fff;border-radius:8px;font-size:13px;margin-bottom:12px}
+.ldot{width:8px;height:8px;border-radius:50%;background:#6EE7B7;animation:pulse 1.5s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.jrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.jrow:last-child{border-bottom:none}.jdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.jr{background:var(--amber);animation:pulse 1s infinite}.jok{background:var(--green)}.jerr{background:var(--red)}
+.stitle{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;margin-top:18px}
+.stitle:first-child{margin-top:0}
+.crsec{padding:14px;border-bottom:1px solid var(--border)}.crsec:last-child{border-bottom:none}
+/* Steps */
+.steps{display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px}
+.step{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);white-space:nowrap}
+.step.active{color:var(--blue);font-weight:600}.step.done{color:var(--green)}
+.snum{width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.sarr{color:var(--border);font-size:16px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">Cross<span>List</span> Pro</div>
+  <div class="spacer"></div>
+  <span class="net-url" id="nurl"></span>
+  <div class="sdot off" id="sdot"></div>
+</div>
+<div class="nav">
+  <button class="nb active" onclick="G('dash',this)"><span class="ic">📊</span>Início</button>
+  <button class="nb" onclick="G('novo',this)"><span class="ic">📸</span>Novo anúncio</button>
+  <button class="nb" onclick="G('listings',this)"><span class="ic">📦</span>Os meus</button>
+  <button class="nb" onclick="G('publish',this)"><span class="ic">🚀</span>Publicar</button>
+  <button class="nb" onclick="G('monitor',this)"><span class="ic">🔍</span>Monitor</button>
+  <button class="nb" onclick="G('feed',this)"><span class="ic">⚡</span>Feed Live</button>
+  <button class="nb" onclick="G('pasta',this)"><span class="ic">📁</span>Pasta</button>
+  <button class="nb" onclick="G('sync',this)"><span class="ic">🔄</span>Sincronizar</button>
+  <button class="nb" onclick="G('settings',this)"><span class="ic">⚙️</span>Contas</button>
+</div>
+<div class="main">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dash">
+  <div class="kgrid">
+    <div class="kpi"><div class="kv" id="klst">—</div><div class="kl">Anúncios</div></div>
+    <div class="kpi"><div class="kv" id="kact">—</div><div class="kl">Publicados</div></div>
+    <div class="kpi"><div class="kv" id="kfeed" style="color:var(--gray)">OFF</div><div class="kl">Feed Live</div></div>
+    <div class="kpi"><div class="kv" id="kitems">0</div><div class="kl">Detectados</div></div>
+  </div>
+  <div class="card"><div class="cb">
+    <div style="font-size:14px;font-weight:600;margin-bottom:14px">🚀 Como usar</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:10px">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">1</div>
+        <div><div style="font-size:13px;font-weight:500">Ligar as tuas contas nos marketplaces</div><div style="font-size:12px;color:var(--text2)">Vai a <b>Contas</b> → coloca o email e password onde já tens conta (Vinted, OLX, etc.)</div></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">2</div>
+        <div><div style="font-size:13px;font-weight:500">Fotografa o produto → a IA preenche tudo</div><div style="font-size:12px;color:var(--text2)">Vai a <b>Novo anúncio</b> → carrega a foto → clica "✨ Preencher com IA" → tu só defines o preço</div></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">3</div>
+        <div><div style="font-size:13px;font-weight:500">Publicar em todos os marketplaces de uma vez</div><div style="font-size:12px;color:var(--text2)">Vai a <b>Publicar</b> → selecciona o anúncio → activa as plataformas → um botão publica em todos</div></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn bp" onclick="G('novo',document.querySelectorAll('.nb')[1])">📸 Criar anúncio com IA</button>
+      <button class="btn bs" onclick="G('settings',document.querySelectorAll('.nb')[6])">⚙️ Ligar contas</button>
+    </div>
+  </div></div>
+  <div class="stitle">Publicações recentes</div>
+  <div id="djobs"><div class="empty"><div class="eic">📋</div>Nenhuma publicação ainda</div></div>
+</div>
+
+<!-- NOVO ANÚNCIO -->
+<div class="page" id="page-novo">
+  <div class="steps">
+    <div class="step active" id="s1"><div class="snum">1</div>Foto</div>
+    <div class="sarr">›</div>
+    <div class="step" id="s2"><div class="snum">2</div>IA analisa</div>
+    <div class="sarr">›</div>
+    <div class="step" id="s3"><div class="snum">3</div>Tu defines o preço</div>
+    <div class="sarr">›</div>
+    <div class="step" id="s4"><div class="snum">4</div>Guardado</div>
+  </div>
+
+  <!-- FASE 1 -->
+  <div id="f1">
+    <div class="pdrop" id="dropz" ondragover="dov(event)" ondragleave="dlv(event)" ondrop="ddr(event)">
+      <input type="file" id="finput" accept="image/*" multiple onchange="hfiles(this.files)">
+      <div style="font-size:44px;margin-bottom:10px">📸</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">Arrasta a foto ou clica para seleccionar</div>
+      <div style="font-size:12px;color:var(--text2)">JPG, PNG, WEBP · máx 10MB</div>
+    </div>
+    <div class="pprev" id="pprev"></div>
+    <div style="margin-top:16px;display:flex;align-items:center;gap:12px" id="aibtnw" style="display:none">
+      <button class="btn bai" onclick="runAI()" id="aibtn" disabled>✨ Preencher com IA</button>
+      <span style="font-size:12px;color:var(--text2)">a IA analisa a foto e cria o anúncio completo</span>
+    </div>
+  </div>
+
+  <!-- FASE 2 (loading) -->
+  <div id="f2" style="display:none;text-align:center;padding:48px 20px">
+    <div style="font-size:44px;margin-bottom:12px">🤖</div>
+    <div style="font-size:15px;font-weight:600;margin-bottom:6px">A IA está a trabalhar...</div>
+    <div style="font-size:13px;color:var(--text2)" id="aimsg">A identificar o produto e marca</div>
+    <div style="margin-top:16px;display:flex;justify-content:center"><div class="sp spd"></div></div>
+  </div>
+
+  <!-- FASE 3 (resultado) -->
+  <div id="f3" style="display:none">
+    <div class="aipanel">
+      <div style="font-size:12px;font-weight:600;color:#5B21B6;margin-bottom:6px;display:flex;align-items:center;gap:6px">✨ Criado pela IA — como vendedor experiente destes marketplaces</div>
+      <div class="aihook" id="aihook"></div>
+      <div class="ainote" id="ainote"></div>
+    </div>
+    <div class="fg"><label class="fl">Título <span class="bdg bai2">✨ IA</span></label><input type="text" id="ft"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Marca <span class="bdg bai2">✨ IA</span></label><input type="text" id="fb"></div>
+      <div class="fg"><label class="fl">Condição <span class="bdg bai2">✨ IA</span></label>
+        <select id="fc"><option value="new">Novo</option><option value="very_good">Muito bom</option><option value="good">Bom estado</option><option value="acceptable">Aceitável</option></select></div>
+    </div>
+    <div class="fr">
+      <div class="fg">
+        <label class="fl" style="display:flex;justify-content:space-between"><span>💶 Preço (€) <span style="color:var(--red)">*</span></span><span style="color:var(--amber);font-weight:600;font-size:11px">← só tu defines</span></label>
+        <input type="number" id="fp" placeholder="0.00" style="font-size:18px;font-weight:700;border-color:var(--amber);border-width:2px">
+      </div>
+      <div class="fg"><label class="fl">Categoria <span class="bdg bai2">✨ IA</span></label>
+        <select id="fcat"><option>Componentes mobilidade</option><option>Travões</option><option>Motores e-bike</option><option>Cargo bike</option><option>Automotive</option><option>Electrónica</option><option>Desporto</option><option>Casa</option><option>Outro</option></select></div>
+    </div>
+    <div class="fg">
+      <label class="fl">Descrição <span class="bdg bai2">✨ IA</span> <span style="font-size:11px;color:var(--text2);font-weight:400">— versão diferente por plataforma</span></label>
+      <div class="dtabs" id="dtabs">
+        <button class="dtab active" onclick="sdesc('geral',this)">Geral</button>
+        <button class="dtab" onclick="sdesc('vinted',this)">Vinted</button>
+        <button class="dtab" onclick="sdesc('olx',this)">OLX</button>
+        <button class="dtab" onclick="sdesc('wallapop',this)">Wallapop</button>
+        <button class="dtab" onclick="sdesc('ebay',this)">eBay (EN)</button>
+      </div>
+      <textarea id="fdesc" style="height:90px"></textarea>
+    </div>
+    <div class="fg">
+      <label class="fl">Tags <span class="bdg bai2">✨ IA</span></label>
+      <div class="twrap" id="twrap" onclick="document.getElementById('tin').focus()">
+        <input class="tin" id="tin" placeholder="adicionar tag..." onkeydown="atag(event)">
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Localização</label><input type="text" id="floc" value="Porto"></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn bs" onclick="resetNovo()">← Recomeçar</button>
+      <button class="btn bp" onclick="saveL()" style="flex:1">💾 Guardar anúncio</button>
+    </div>
+  </div>
+</div>
+
+<!-- OS MEUS -->
+<div class="page" id="page-listings">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div style="font-size:15px;font-weight:600">Os meus anúncios</div>
+    <button class="btn bp bsm" onclick="G('novo',document.querySelectorAll('.nb')[1])">+ Novo</button>
+  </div>
+  <div id="llist"><div class="empty"><div class="eic">📦</div>Nenhum anúncio ainda</div></div>
+</div>
+
+<!-- PUBLICAR -->
+<div class="page" id="page-publish">
+  <div class="stitle">Anúncio</div>
+  <select id="psel" style="margin-bottom:14px"><option value="">— Seleccionar anúncio —</option></select>
+  <div class="stitle">Plataformas — activa onde queres publicar</div>
+  <div class="card"><div class="cb" id="pplats"></div></div>
+  <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer;margin-bottom:14px">
+    <input type="checkbox" id="pvis" style="width:auto"> Mostrar o browser a trabalhar (útil na 1ª vez para confirmar)
+  </label>
+  <button class="btn bp" onclick="doPublish()" id="pbtn">🚀 Publicar agora em todos</button>
+  <div class="stitle" style="margin-top:20px">Histórico</div>
+  <div id="phist"><div class="empty"><div class="eic">📋</div>Sem publicações</div></div>
+</div>
+
+<!-- MONITOR -->
+<div class="page" id="page-monitor">
+  <div class="card"><div class="cb">
+    <div class="fg"><label class="fl">O que pesquisar (uma keyword por linha)</label>
+      <textarea id="mkw" placeholder="shimano cargo brake&#10;magura hydraulic&#10;ebike motor bosch" style="height:90px"></textarea></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Preço máximo (€)</label><input type="number" id="mmax" placeholder="sem limite"></div>
+      <div class="fg"><label class="fl">Marketplace</label>
+        <select id="mdom"><option value="www.vinted.pt">Vinted PT</option><option value="www.vinted.de">Vinted DE</option><option value="www.vinted.fr">Vinted FR</option></select></div>
+    </div>
+    <button class="btn bp" onclick="runMon()" id="mbtn">🔍 Pesquisar agora</button>
+  </div></div>
+  <div id="mrun" style="display:none" class="alert ab"><span class="sp spd"></span>A pesquisar...</div>
+  <div id="mres"></div>
+</div>
+
+<!-- FEED -->
+<div class="page" id="page-feed">
+  <div class="card"><div class="cb">
+    <div class="fg"><label class="fl">Keywords (separadas por vírgula)</label>
+      <input type="text" id="fkw" placeholder="shimano brake, cargo bike, ebike motor"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Preço máximo (€)</label><input type="number" id="fmax" placeholder="sem limite"></div>
+      <div class="fg"><label class="fl">Velocidade</label>
+        <select id="fspd"><option value="2">Normal (2s)</option><option value="0.8">Turbo (0.8s)</option><option value="5">Lento (5s)</option></select></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn bg" onclick="startF()" id="fsbtn">▶ Iniciar</button>
+      <button class="btn bs" onclick="stopF()" id="fstbtn" disabled>⏹ Parar</button>
+      <button class="btn bs bsm" onclick="document.getElementById('flist').innerHTML='';fN=0">🗑</button>
+    </div>
+  </div></div>
+  <div id="fbar" style="display:none" class="livebar">
+    <div class="ldot"></div><span id="fbartxt">A monitorizar...</span>
+    <span style="margin-left:auto;font-size:12px;color:#94A3B8" id="fn">0 novos</span>
+  </div>
+  <div class="card" id="fcard" style="display:none"><div id="flist"></div></div>
+  <div class="empty" id="fempty"><div class="eic">⚡</div>Inicia o feed para ver anúncios em tempo real</div>
+</div>
+
+<!-- CONTAS -->
+<div class="page" id="page-settings">
+  <div class="alert aai">🤖 As tuas credenciais são usadas pelo sistema para fazer login automaticamente quando publicas — exactamente como se fosses tu, só que automático.</div>
+  <div class="alert ab">
+    <b>Como funciona:</b> para cada marketplace onde já tens conta, coloca o email e password que usas normalmente. Quando clicas "Publicar", o sistema abre o browser, faz login com esses dados e publica o anúncio. Tu não precisas de fazer nada.
+  </div>
+  <div class="card" id="crcard"></div>
+  <button class="btn bp" onclick="saveCr()" style="margin-top:8px">💾 Guardar credenciais</button>
+</div>
+
+
+<!-- SINCRONIZAR -->
+<div class="page" id="page-sync">
+  <div class="kgrid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="kpi"><div class="kv" id="sy-active">--</div><div class="kl">Activos</div></div>
+    <div class="kpi"><div class="kv" id="sy-sold" style="color:var(--green)">--</div><div class="kl">Vendidos</div></div>
+    <div class="kpi"><div class="kv" id="sy-next" style="font-size:12px;padding-top:6px">--</div><div class="kl">Proximo sync</div></div>
+  </div>
+  <div id="sy-run" style="display:none" class="livebar">
+    <div class="ldot"></div><span>A verificar todos os anuncios activos...</span>
+  </div>
+  <div id="sy-olxwarn" style="display:none;background:#FAEEDA;border-radius:10px;padding:12px;margin-bottom:12px"></div>
+  <div id="sy-lastlog" style="margin-bottom:12px;font-size:12px;color:var(--text2)"></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+    <button class="btn bp" onclick="runSync()" id="sy-btn">Verificar agora</button>
+    <span style="font-size:12px;color:var(--text2)">Detecta vendidos, remove de todas as plataformas, republica OLX antes de expirar</span>
+  </div>
+  <div class="stitle">Como funciona</div>
+  <div class="card" style="margin-bottom:16px"><div class="cb" style="display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;gap:10px">
+      <div style="font-size:20px;flex-shrink:0">✅</div>
+      <div><div style="font-size:13px;font-weight:500">Vendido numa plataforma</div><div style="font-size:12px;color:var(--text2)">Quando detecta que vendeste num marketplace, remove automaticamente das outras plataformas onde ainda esta publicado. Sem intervencao tua.</div></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="font-size:20px;flex-shrink:0">🔄</div>
+      <div><div style="font-size:13px;font-weight:500">Plataformas com limite de tempo</div><div style="font-size:12px;color:var(--text2)">OLX (30 dias), CustoJusto (60 dias), Segunda Mao (90 dias), eBay (10 dias). O sistema avisa 5 dias antes e republica automaticamente. Nunca perdes um anuncio por esquecimento.</div></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="font-size:20px;flex-shrink:0">⏰</div>
+      <div><div style="font-size:13px;font-weight:500">Verificacao automatica de 4 em 4 horas</div><div style="font-size:12px;color:var(--text2)">Sem precisares de fazer nada. O sistema verifica todos os teus anuncios activos regularmente em background.</div></div>
+    </div>
+  </div></div>
+  <div class="stitle">Importar anuncios ja existentes</div>
+  <div class="alert ab" style="margin-bottom:12px">Ja tens anuncios publicados? Importa-os aqui para o CrossList passar a gerir tudo num so lugar.</div>
+  <div class="card"><div class="cb">
+    <div class="pltog">
+      <div class="pinfo"><div class="pname" style="color:#09B27A">Vinted</div><div class="ptype">Importa todos os teus anuncios activos</div></div>
+      <button class="btn bp bsm" id="imp-vinted" onclick="importP('vinted')">Importar</button>
+    </div>
+    <div class="pltog">
+      <div class="pinfo"><div class="pname" style="color:#13C1AC">Wallapop</div><div class="ptype">Importa todos os teus anuncios activos</div></div>
+      <button class="btn bp bsm" id="imp-wallapop" onclick="importP('wallapop')">Importar</button>
+    </div>
+    <div class="pltog">
+      <div class="pinfo"><div class="pname" style="color:#6A3EC2">OLX Portugal</div><div class="ptype">Importa via browser automatico</div></div>
+      <button class="btn bp bsm" id="imp-olx" onclick="importP('olx')">Importar</button>
+    </div>
+  </div></div>
+  <div class="stitle">Notificacoes</div>
+  <div class="card"><div class="cb" id="notif-list"><div class="empty"><div class="eic">🔔</div>Sem notificacoes ainda</div></div></div>
+</div>
+
+<!-- PASTA iCLOUD -->
+<div class="page" id="page-pasta">
+
+  <!-- Estado: não configurado -->
+  <div id="drive-setup" style="display:none">
+    <div class="alert aai" style="margin-bottom:14px">
+      <b>Ligar ao Google Drive — 3 passos</b><br>
+      Faz isto uma vez e a sincronizacao fica automatica para sempre.
+    </div>
+    <div class="card" style="margin-bottom:12px"><div class="cb">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:10px">
+          <div style="width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">1</div>
+          <div>
+            <div style="font-size:13px;font-weight:500">Criar Service Account no Google</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">Vai a <a href="https://console.cloud.google.com" target="_blank" style="color:var(--blue)">console.cloud.google.com</a> → Novo projecto → Activar Drive API → IAM → Service Accounts → Criar → Chave JSON → Download</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <div style="width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">2</div>
+          <div>
+            <div style="font-size:13px;font-weight:500">Partilhar a pasta com o email da Service Account</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">No Google Drive, clica direito na pasta Inventario → Partilhar → cola o email da service account (ex: crosslist@projecto.iam.gserviceaccount.com)</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <div style="width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">3</div>
+          <div>
+            <div style="font-size:13px;font-weight:500">Colar as credenciais aqui</div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+    <div class="card"><div class="cb">
+      <div class="fg">
+        <label class="fl">Conteudo do ficheiro JSON da Service Account</label>
+        <textarea id="drive-key-json" style="height:100px;font-size:11px;font-family:monospace" placeholder="{ paste aqui o conteudo do ficheiro .json que fizeste download... }"></textarea>
+      </div>
+      <div class="fg">
+        <label class="fl">ID da pasta no Google Drive</label>
+        <input type="text" id="drive-folder-id" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
+        <div style="font-size:11px;color:var(--text2);margin-top:4px">Abre a pasta no browser, o ID esta no URL: drive.google.com/drive/folders/<b>ESTE-E-O-ID</b></div>
+      </div>
+      <div class="fg">
+        <label class="fl">Nome da pasta (para referencia)</label>
+        <input type="text" id="drive-folder-name" value="Inventario" placeholder="Inventario">
+      </div>
+      <button class="btn bp" onclick="connectDrive()" id="drive-connect-btn">Ligar ao Google Drive</button>
+    </div></div>
+  </div>
+
+  <!-- Estado: configurado + galeria -->
+  <div id="drive-gallery" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:14px;font-weight:600" id="drive-folder-title">Google Drive</div>
+        <div style="font-size:12px;color:var(--text2)" id="drive-status-line">A sincronizar...</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn bs bsm" onclick="syncDrive()">Sincronizar agora</button>
+        <button class="btn bs bsm" onclick="clearSelDrive()" id="drv-clear" style="display:none">Limpar</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:14px;align-items:flex-start">
+
+      <!-- Grade de fotos -->
+      <div style="flex:1;min-width:0">
+        <div id="drv-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(95px,1fr));gap:6px"></div>
+        <div class="empty" id="drv-empty" style="display:none"><div class="eic">📷</div>Sem fotos na pasta.<br>Adiciona fotos no Google Drive e elas aparecem aqui automaticamente.</div>
+      </div>
+
+      <!-- Painel produto -->
+      <div style="width:210px;flex-shrink:0;position:sticky;top:110px">
+        <div class="card">
+          <div class="ch"><div class="ct">Novo produto</div></div>
+          <div class="cb">
+            <div id="drv-sel-prev" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;min-height:60px;margin-bottom:10px">
+              <div style="grid-column:1/-1;text-align:center;padding:14px;color:var(--text2);font-size:12px">Clica nas fotos para seleccionar</div>
+            </div>
+            <div class="fg"><label class="fl">Titulo (opcional)</label>
+              <input type="text" id="drv-title" placeholder="IA preenche depois"></div>
+            <div id="drv-count" style="font-size:12px;color:var(--text2);margin-bottom:10px;text-align:center"></div>
+            <button class="btn bp" style="width:100%" onclick="createDriveProduct()" id="drv-create" disabled>Criar produto</button>
+            <div style="font-size:11px;color:var(--text2);margin-top:8px;text-align:center">Fotos usadas ficam marcadas</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text2);background:var(--lgray);padding:8px;border-radius:8px">
+          Adicionas fotos no iPhone via app Google Drive → aparecem aqui em 30 segundos
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty" id="drive-loading"><div class="eic">☁️</div>A verificar ligacao ao Drive...</div>
+</div>
+
+<!-- SINCRONIZAR -->
+<div class="page" id="page-sync">
+  <div class="kgrid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="kpi"><div class="kv" id="sy-active">--</div><div class="kl">Activos</div></div>
+    <div class="kpi"><div class="kv" id="sy-sold" style="color:var(--green)">--</div><div class="kl">Vendidos</div></div>
+    <div class="kpi"><div class="kv" id="sy-next" style="font-size:12px;padding-top:6px">--</div><div class="kl">Proximo sync</div></div>
+  </div>
+  <div id="sy-run" style="display:none" class="livebar">
+    <div class="ldot"></div><span>A verificar todos os anuncios activos...</span>
+  </div>
+  <div id="sy-olxwarn" style="display:none;background:#FAEEDA;border-radius:10px;padding:12px;margin-bottom:12px"></div>
+  <div id="sy-lastlog" style="margin-bottom:12px;font-size:12px;color:var(--text2)"></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+    <button class="btn bp" onclick="runSync()" id="sy-btn">Verificar agora</button>
+    <span style="font-size:12px;color:var(--text2)">Detecta vendidos, remove de todas as plataformas, republica OLX antes de expirar</span>
+  </div>
+  <div class="stitle">Como funciona</div>
+  <div class="card" style="margin-bottom:16px"><div class="cb" style="display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;gap:10px">
+      <div style="font-size:20px;flex-shrink:0">✅</div>
+      <div><div style="font-size:13px;font-weight:500">Vendido numa plataforma</div><div style="font-size:12px;color:var(--text2)">Quando detecta que vendeste num marketplace, remove automaticamente das outras plataformas onde ainda esta publicado. Sem intervencao tua.</div></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="font-size:20px;flex-shrink:0">🔄</div>
+      <div><div style="font-size:13px;font-weight:500">Plataformas com limite de tempo</div><div style="font-size:12px;color:var(--text2)">OLX (30 dias), CustoJusto (60 dias), Segunda Mao (90 dias), eBay (10 dias). O sistema avisa 5 dias antes e republica automaticamente. Nunca perdes um anuncio por esquecimento.</div></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="font-size:20px;flex-shrink:0">⏰</div>
+      <div><div style="font-size:13px;font-weight:500">Verificacao automatica de 4 em 4 horas</div><div style="font-size:12px;color:var(--text2)">Sem precisares de fazer nada. O sistema verifica todos os teus anuncios activos regularmente em background.</div></div>
+    </div>
+  </div></div>
+  <div class="stitle">Importar anuncios ja existentes</div>
+  <div class="alert ab" style="margin-bottom:12px">Ja tens anuncios publicados? Importa-os aqui para o CrossList passar a gerir tudo num so lugar.</div>
+  <div class="card"><div class="cb">
+    <div class="pltog">
+      <div class="pinfo"><div class="pname" style="color:#09B27A">Vinted</div><div class="ptype">Importa todos os teus anuncios activos</div></div>
+      <button class="btn bp bsm" id="imp-vinted" onclick="importP('vinted')">Importar</button>
+    </div>
+    <div class="pltog">
+      <div class="pinfo"><div class="pname" style="color:#13C1AC">Wallapop</div><div class="ptype">Importa todos os teus anuncios activos</div></div>
+      <button class="btn bp bsm" id="imp-wallapop" onclick="importP('wallapop')">Importar</button>
+    </div>
+    <div class="pltog">
+      <div class="pinfo"><div class="pname" style="color:#6A3EC2">OLX Portugal</div><div class="ptype">Importa via browser automatico</div></div>
+      <button class="btn bp bsm" id="imp-olx" onclick="importP('olx')">Importar</button>
+    </div>
+  </div></div>
+  <div class="stitle">Notificacoes</div>
+  <div class="card"><div class="cb" id="notif-list"><div class="empty"><div class="eic">🔔</div>Sem notificacoes ainda</div></div></div>
+</div>
+
+<!-- PASTA iCLOUD -->
+<div class="page" id="page-pasta">
+  <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:14px;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px">
+      <label class="fl">Pasta de fotos (iCloud, Dropbox, local)</label>
+      <input type="text" id="pasta-path" placeholder="C:\Users\Jose\iCloudDrive\Inventario">
+    </div>
+    <button class="btn bp" onclick="loadGallery()">Abrir pasta</button>
+    <button class="btn bs" onclick="savePastaConfig()">Guardar</button>
+  </div>
+  <div id="gallery-wrap" style="display:none">
+    <div style="display:flex;gap:14px;align-items:flex-start">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:13px;color:var(--text2)" id="gal-info">0 fotos</div>
+          <button class="btn bs bsm" onclick="clearSel()" id="gal-clear" style="display:none">Limpar</button>
+        </div>
+        <div id="gal-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(95px,1fr));gap:6px"></div>
+      </div>
+      <div style="width:210px;flex-shrink:0;position:sticky;top:110px">
+        <div class="card">
+          <div class="ch"><div class="ct">Novo produto</div></div>
+          <div class="cb">
+            <div id="sel-preview" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;min-height:60px;margin-bottom:10px">
+              <div style="grid-column:1/-1;text-align:center;padding:14px;color:var(--text2);font-size:12px">Clica nas fotos para seleccionar</div>
+            </div>
+            <div class="fg"><label class="fl">Titulo (opcional)</label>
+              <input type="text" id="gal-title" placeholder="IA preenche depois"></div>
+            <div id="sel-count" style="font-size:12px;color:var(--text2);margin-bottom:10px;text-align:center"></div>
+            <button class="btn bp" style="width:100%" onclick="createProduct()" id="gal-create" disabled>Criar produto</button>
+            <div style="font-size:11px;color:var(--text2);margin-top:8px;text-align:center">A IA preenche o resto</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text2);background:var(--lgray);padding:8px;border-radius:8px">Fotos usadas ficam com marca para nao repetir</div>
+      </div>
+    </div>
+  </div>
+  <div class="empty" id="gal-empty"><div class="eic">📁</div>Insere o caminho da pasta e clica Abrir pasta</div>
+</div>
+
+<!-- SINCRONIZAR -->
+<div class="page" id="page-sync">
+  <div class="kgrid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="kpi"><div class="kv" id="sy-active">--</div><div class="kl">Activos</div></div>
+    <div class="kpi"><div class="kv" id="sy-sold" style="color:var(--green)">--</div><div class="kl">Vendidos</div></div>
+    <div class="kpi"><div class="kv" id="sy-next" style="font-size:12px;padding-top:6px">--</div><div class="kl">Proximo sync</div></div>
+  </div>
+  <div id="sy-run" style="display:none" class="livebar">
+    <div class="ldot"></div><span>A verificar todos os anuncios activos...</span>
+  </div>
+  <div id="sy-olxwarn" style="display:none;background:#FAEEDA;border-radius:10px;padding:12px;margin-bottom:12px"></div>
+  <div id="sy-lastlog" style="margin-bottom:12px;font-size:12px;color:var(--text2)"></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+    <button class="btn bp" onclick="runSync()" id="sy-btn">Verificar agora</button>
+    <span style="font-size:12px;color:var(--text2)">Detecta vendidos, remove de todas as plataformas, republica OLX antes de expirar</span>
+  </div>
+  <div class="stitle">Como funciona</div>
+  <div class="card" style="margin-bottom:16px"><div class="cb" style="display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;gap:10px">
+      <div style="font-size:20px;flex-shrink:0">✅</div>
+      <div><div style="font-size:13px;font-weight:500">Vendido numa plataforma</div><div style="font-size:12px;color:var(--text2)">Quando detecta que vendeste num marketplace, remove automaticamente das outras plataformas onde ainda esta publicado. Sem intervencao tua.</div></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="font-size:20px;flex-shrink:0">🔄</div>
+      <div><div style="font-size:13px;font-weight:500">Plataformas com limite de tempo</div><div style="font-size:12px;color:var(--text2)">OLX (30 dias), CustoJusto (60 dias), Segunda Mao (90 dias), eBay (10 dias). O sistema avisa 5 dias antes e republica automaticamente. Nunca perdes um anuncio por esquecimento.</div></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="font-size:20px;flex-shrink:0">⏰</div>
+      <div><div style="font-size:13px;font-weight:500">Verificacao automatica de 4 em 4 horas</div><div style="font-size:12px;color:var(--text2)">Sem precisares de fazer nada. O sistema verifica todos os teus anuncios activos regularmente em background.</div></div>
+    </div>
+  </div></div>
+  <div class="stitle">Importar anuncios ja existentes</div>
+  <div class="alert ab" style="margin-bottom:12px">Ja tens anuncios publicados? Importa-os aqui para o CrossList passar a gerir tudo num so lugar.</div>
+  <div class="card"><div class="cb">
+    <div class="pltog">
+      <div class="pinfo"><div class="pname" style="color:#09B27A">Vinted</div><div class="ptype">Importa todos os teus anuncios activos</div></div>
+      <button class="btn bp bsm" id="imp-vinted" onclick="importP('vinted')">Importar</button>
+    </div>
+    <div class="pltog">
+      <div class="pinfo"><div class="pname" style="color:#13C1AC">Wallapop</div><div class="ptype">Importa todos os teus anuncios activos</div></div>
+      <button class="btn bp bsm" id="imp-wallapop" onclick="importP('wallapop')">Importar</button>
+    </div>
+    <div class="pltog">
+      <div class="pinfo"><div class="pname" style="color:#6A3EC2">OLX Portugal</div><div class="ptype">Importa via browser automatico</div></div>
+      <button class="btn bp bsm" id="imp-olx" onclick="importP('olx')">Importar</button>
+    </div>
+  </div></div>
+  <div class="stitle">Notificacoes</div>
+  <div class="card"><div class="cb" id="notif-list"><div class="empty"><div class="eic">🔔</div>Sem notificacoes ainda</div></div></div>
+</div>
+
+<!-- PASTA iCLOUD -->
+<div class="page" id="page-pasta">
+  <div class="alert ab" style="margin-bottom:14px">
+    <b>Como funciona:</b> aponta para uma pasta local (iCloud Drive, Dropbox, etc.) com as fotos dos teus produtos organizadas em subpastas. O sistema detecta automaticamente e cria rascunhos — tu so precisas de definir o preco e publicar.
+  </div>
+  <div class="card" style="margin-bottom:14px"><div class="cb">
+    <div class="fg"><label class="fl">Caminho da pasta</label>
+      <input type="text" id="pasta-path" placeholder="C:\Users\Jose\iCloudDrive\VintedInventario ou /Users/jose/Library/Mobile Documents/...">
+    </div>
+    <div class="fg"><label class="fl">Como estao organizadas as fotos?</label>
+      <select id="pasta-mode" onchange="toggleBatchOpt()">
+        <option value="batch">Fotos soltas — cada N fotos e um produto (meu caso)</option>
+        <option value="auto">Auto — detecta automaticamente</option>
+        <option value="flat_groups">Fotos soltas agrupadas por nome de ficheiro</option>
+        <option value="subfolders">Cada subpasta e um produto</option>
+      </select>
+    </div>
+    <div id="batch-opt" class="fg">
+      <label class="fl">Quantas fotos por produto? <strong id="ppp-val">4</strong></label>
+      <input type="range" id="pasta-ppp" min="1" max="10" value="4"
+        oninput="document.getElementById('ppp-val').textContent=this.value"
+        style="width:100%;accent-color:var(--blue)">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-top:2px"><span>1 foto</span><span>10 fotos</span></div>
+    </div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:12px;background:var(--lgray);padding:10px;border-radius:8px">
+      <b>O teu caso:</b> pasta com fotos soltas (IMG_001.jpg, IMG_002.jpg...) — selecciona "Fotos soltas" e define quantas fotos por produto. O sistema agrupa automaticamente por ordem.
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn bp" onclick="saveAndScan()">Guardar e fazer scan</button>
+      <button class="btn bs" onclick="savePastaConfig()">So guardar</button>
+    </div>
+  </div></div>
+
+  <div id="scan-running" style="display:none" class="livebar" style="margin-bottom:12px">
+    <div class="ldot"></div><span>A analisar pasta...</span>
+  </div>
+
+  <div id="scan-results" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:14px;font-weight:600" id="scan-summary"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn bs bsm" onclick="toggleSelectAll()">Seleccionar todos</button>
+        <button class="btn bp" onclick="importSelected()" id="import-sel-btn">Importar seleccionados</button>
+      </div>
+    </div>
+    <div id="scan-items-list"></div>
+  </div>
+</div>
+</div>
+<script>
+const PLATS=[
+  {id:'vinted',name:'Vinted',type:'Automático — entra com as tuas credenciais',color:'#09B27A'},
+  {id:'wallapop',name:'Wallapop',type:'Automático — entra com as tuas credenciais',color:'#13C1AC'},
+  {id:'segunda',name:'Segunda Mão',type:'Automático — entra com as tuas credenciais',color:'#C47A0B'},
+  {id:'olx',name:'OLX Portugal',type:'API Parceiro (requer aprovação)',color:'#6A3EC2'},
+  {id:'custojusto',name:'CustoJusto',type:'API (conta Pro ~€19/mês)',color:'#D93B17'},
+  {id:'ebay',name:'eBay',type:'API Oficial (developer.ebay.com)',color:'#E53238'},
+  {id:'facebook',name:'Facebook Marketplace',type:'Meta API (requer aprovação)',color:'#1877F2'},
+];
+const CRF={
+  vinted:[{k:'email',l:'Email',t:'email'},{k:'password',l:'Password',t:'password'}],
+  wallapop:[{k:'email',l:'Email',t:'email'},{k:'password',l:'Password',t:'password'}],
+  segunda:[{k:'email',l:'Email',t:'email'},{k:'password',l:'Password',t:'password'}],
+  olx:[{k:'client_id',l:'Client ID',t:'text'},{k:'client_secret',l:'Client Secret',t:'password'}],
+  custojusto:[{k:'api_key',l:'API Key',t:'password'},{k:'user_id',l:'User ID',t:'text'}],
+  ebay:[{k:'app_id',l:'App ID',t:'text'},{k:'cert_id',l:'Cert ID',t:'password'},{k:'user_token',l:'User Token',t:'password'}],
+  facebook:[{k:'access_token',l:'Access Token',t:'password'},{k:'catalog_id',l:'Catalog ID',t:'text'}],
+};
+let listings=[],tog={},tags=[],fEs=null,fN=0,photos=[],aiD={},descKey='geral';
+PLATS.forEach(p=>tog[p.id]=false);
+
+function G(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(id==='listings')loadL();
+  if(id==='publish'){loadL();rpPlats();}
+  if(id==='settings')loadCr();
+  if(id==='sync')loadSync();
+  if(id==='pasta')loadPasta();
+  if(id==='dash')loadDash();
+}
+
+async function loadSt(){
+  try{const d=await(await fetch('/api/status')).json();
+    document.getElementById('sdot').className='sdot'+(d.ok?'':' off');
+    document.getElementById('klst').textContent=d.listings;
+    document.getElementById('kfeed').textContent=d.feed_running?'LIVE':'OFF';
+    document.getElementById('kfeed').style.color=d.feed_running?'var(--green)':'var(--gray)';
+    document.getElementById('kitems').textContent=d.feed_items;
+  }catch(e){}
+}
+
+async function loadDash(){
+  loadSt();
+  try{
+    const lst=await(await fetch('/api/listings')).json();
+    document.getElementById('kact').textContent=lst.filter(l=>l.status==='active').length;
+    const jobs=await(await fetch('/api/publish/jobs')).json();
+    const el=document.getElementById('djobs');
+    if(!jobs.length)return;
+    el.innerHTML='<div class="card"><div style="padding:0 4px">'+jobs.slice(0,8).map(j=>{
+      const all=Object.values(j.results||{});const ok=all.filter(r=>r.success).length;
+      const cls=j.status==='running'?'jr':ok>0?'jok':'jerr';
+      return`<div class="jrow"><div class="jdot ${cls}"></div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${j.listing}</div><div style="font-size:11px;color:var(--text2)">${j.platforms.join(', ')}</div></div><div style="font-size:12px;color:${ok>0?'var(--green)':'var(--red)'}">${j.status==='running'?'<span class="sp spd"></span>':ok+'/'+j.platforms.length+' OK'}</div></div>`;
+    }).join('')+'</div></div>';
+  }catch(e){}
+}
+
+// Photos
+function dov(e){e.preventDefault();document.getElementById('dropz').classList.add('drag');}
+function dlv(){document.getElementById('dropz').classList.remove('drag');}
+function ddr(e){e.preventDefault();document.getElementById('dropz').classList.remove('drag');hfiles(e.dataTransfer.files);}
+function hfiles(files){
+  for(const f of files){
+    if(!f.type.startsWith('image/'))continue;
+    const r=new FileReader();
+    r.onload=ev=>{
+      photos.push({b64:ev.target.result.split(',')[1],mime:f.type,prev:ev.target.result});
+      rPhotos();
+    };
+    r.readAsDataURL(f);
+  }
+}
+function rPhotos(){
+  document.getElementById('pprev').innerHTML=photos.map((p,i)=>`<div class="pthumb"><img src="${p.prev}"><button class="del" onclick="rmPh(${i})">✕</button></div>`).join('');
+  document.getElementById('aibtn').disabled=photos.length===0;
+  document.getElementById('aibtnw').style.display=photos.length>0?'flex':'none';
+}
+function rmPh(i){photos.splice(i,1);rPhotos();}
+
+function setStep(n){for(let i=1;i<=4;i++){const e=document.getElementById('s'+i);e.className='step'+(i===n?' active':i<n?' done':'');}}
+
+const aimsgs=['A identificar o produto e marca...','A avaliar estado e condição...','A criar título optimizado...','A escrever descrições para cada plataforma...','A gerar tags e hook de vendedor...'];
+let aidx=0,aiiv=null;
+
+async function runAI(){
+  if(!photos.length)return;
+  document.getElementById('f1').style.display='none';
+  document.getElementById('f2').style.display='block';
+  document.getElementById('f3').style.display='none';
+  setStep(2);aidx=0;
+  const mel=document.getElementById('aimsg');mel.textContent=aimsgs[0];
+  aiiv=setInterval(()=>{aidx=(aidx+1)%aimsgs.length;mel.textContent=aimsgs[aidx];},1800);
+  try{
+    const res=await fetch('/api/ai/analyze',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({image_b64:photos[0].b64,media_type:photos[0].mime})});
+    aiD=await res.json();
+    clearInterval(aiiv);
+    fillF(aiD);
+    document.getElementById('f2').style.display='none';
+    document.getElementById('f3').style.display='block';
+    setStep(3);
+    setTimeout(()=>document.getElementById('fp').focus(),300);
+  }catch(e){clearInterval(aiiv);alert('Erro na análise. Tenta novamente.');resetNovo();}
+}
+
+function fillF(d){
+  document.getElementById('ft').value=d.titulo||'';
+  document.getElementById('fb').value=d.marca||'';
+  document.getElementById('fc').value=d.condicao||'good';
+  document.getElementById('fp').value='';
+  const sel=document.getElementById('fcat');
+  for(const o of sel.options)if(o.text===d.categoria){sel.value=o.value;break;}
+  aiD._d={geral:d.descricao_geral||'',vinted:d.descricao_vinted||'',olx:d.descricao_olx||'',wallapop:d.descricao_wallapop||'',ebay:d.descricao_ebay||''};
+  descKey='geral';document.getElementById('fdesc').value=aiD._d.geral;
+  document.querySelectorAll('.dtab').forEach((t,i)=>t.className='dtab'+(i===0?' active':''));
+  tags=d.tags||[];rTags();
+  document.getElementById('aihook').textContent=d.hook||'';
+  document.getElementById('ainote').textContent=d.notas_vendedor||'';
+}
+
+function sdesc(k,btn){
+  if(aiD._d)aiD._d[descKey]=document.getElementById('fdesc').value;
+  descKey=k;document.getElementById('fdesc').value=(aiD._d||{})[k]||'';
+  document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
+}
+
+function resetNovo(){
+  photos=[];aiD={};tags=[];
+  document.getElementById('pprev').innerHTML='';
+  document.getElementById('f1').style.display='block';
+  document.getElementById('f2').style.display='none';
+  document.getElementById('f3').style.display='none';
+  document.getElementById('aibtnw').style.display='none';
+  setStep(1);
+}
+
+function atag(e){if(e.key!=='Enter'&&e.key!==',')return;e.preventDefault();const v=e.target.value.trim();if(v&&!tags.includes(v)){tags.push(v);rTags();}e.target.value='';}
+function rmTag(t){tags=tags.filter(x=>x!==t);rTags();}
+function rTags(){
+  const w=document.getElementById('twrap'),inp=document.getElementById('tin');
+  w.innerHTML='';
+  tags.forEach(t=>{const s=document.createElement('span');s.className='tag';s.innerHTML=`${t}<button onclick="rmTag('${t}')">×</button>`;w.appendChild(s);});
+  w.appendChild(inp);
+}
+
+async function saveL(){
+  const price=parseFloat(document.getElementById('fp').value);
+  if(!price||price<=0){document.getElementById('fp').focus();alert('Define o preço');return;}
+  const title=document.getElementById('ft').value;if(!title){alert('Título obrigatório');return;}
+  if(aiD._d)aiD._d[descKey]=document.getElementById('fdesc').value;
+  const data={title,price,brand:document.getElementById('fb').value,condition:document.getElementById('fc').value,
+    description:aiD._d?.geral||document.getElementById('fdesc').value,
+    descriptions:aiD._d||{},category:document.getElementById('fcat').value,
+    location:document.getElementById('floc').value,tags,
+    images:photos.map(p=>p.prev),sku:'',status:'draft',platforms:{},
+    ai_hook:document.getElementById('aihook').textContent||''};
+  await fetch('/api/listings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  setStep(4);
+  setTimeout(()=>{resetNovo();G('publish',document.querySelectorAll('.nb')[3]);loadL();},600);
+}
+
+async function loadL(){
+  listings=await(await fetch('/api/listings')).json();
+  const el=document.getElementById('llist');
+  if(!listings.length){el.innerHTML='<div class="empty"><div class="eic">📦</div>Nenhum anúncio ainda<br><br><button class="btn bp bsm" onclick="G(\'novo\',document.querySelectorAll(\'.nb\')[1])">Criar primeiro anúncio</button></div>';return;}
+  el.innerHTML=listings.map(l=>{
+    const plats=Object.keys(l.platforms||{});
+    const pills=plats.length?plats.map(p=>`<span class="pp pp-${p}">${p}</span>`).join(''):'<span class="bdg bgy">rascunho</span>';
+    const img=l.images?.[0]?`<img class="limg" src="${l.images[0]}" alt="">`:`<div class="limg">📦</div>`;
+    return`<div class="lcard">${img}<div style="flex:1;min-width:0"><div class="ltitle">${l.title}</div><div class="lmeta"><span class="bdg bb">€${l.price}</span><span class="bdg bgy">${l.condition}</span>${l.brand?`<span style="font-size:11px;color:var(--text2)">${l.brand}</span>`:''}</div><div class="ppills">${pills}</div></div><button class="btn br bsm" onclick="delL('${l.id}')">🗑</button></div>`;
+  }).join('');
+  const s=document.getElementById('psel');
+  s.innerHTML='<option value="">— Seleccionar —</option>'+listings.map(l=>`<option value="${l.id}">${l.title} (€${l.price})</option>`).join('');
+}
+async function delL(id){if(!confirm('Eliminar?'))return;await fetch('/api/listings/'+id,{method:'DELETE'});loadL();}
+
+function rpPlats(){
+  document.getElementById('pplats').innerHTML=PLATS.map(p=>`<div class="pltog"><div class="pinfo"><div class="pname" style="color:${p.color}">${p.name}</div><div class="ptype">${p.type}</div></div><div class="tgl ${tog[p.id]?'on':''}" id="tg-${p.id}" onclick="togP('${p.id}')"></div></div>`).join('');
+}
+function togP(id){tog[id]=!tog[id];document.getElementById('tg-'+id).className='tgl '+(tog[id]?'on':'');}
+
+async function doPublish(){
+  const lid=document.getElementById('psel').value;
+  if(!lid){alert('Selecciona um anúncio');return;}
+  const plats=Object.entries(tog).filter(([,v])=>v).map(([k])=>k);
+  if(!plats.length){alert('Activa pelo menos uma plataforma');return;}
+  const btn=document.getElementById('pbtn');btn.disabled=true;btn.innerHTML='<span class="sp"></span>A publicar...';
+  await fetch('/api/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({listing_id:lid,platforms:plats,headless:!document.getElementById('pvis').checked})});
+  btn.disabled=false;btn.innerHTML='🚀 Publicar agora em todos';
+  pollJ();
+}
+async function pollJ(){
+  for(let i=0;i<30;i++){
+    await new Promise(r=>setTimeout(r,2000));
+    const jobs=await(await fetch('/api/publish/jobs')).json();
+    const el=document.getElementById('phist');
+    if(!jobs.length)break;
+    el.innerHTML='<div class="card"><div style="padding:0 4px">'+jobs.slice(0,8).map(j=>{
+      const all=Object.values(j.results||{});const ok=all.filter(r=>r.success).length;
+      const cls=j.status==='running'?'jr':ok>0?'jok':'jerr';
+      return`<div class="jrow"><div class="jdot ${cls}"></div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${j.listing}</div><div style="font-size:11px;color:var(--text2)">${j.platforms.join(', ')}</div></div><div style="font-size:12px;color:${ok>0?'var(--green)':'var(--red)'}">${j.status==='running'?'<span class="sp spd"></span>':ok+'/'+j.platforms.length+' OK'}</div></div>`;
+    }).join('')+'</div></div>';
+    if(jobs[0]?.status==='done')break;
+  }
+}
+
+async function runMon(){
+  const kws=document.getElementById('mkw').value.split('\n').map(k=>k.trim()).filter(Boolean);
+  if(!kws.length){alert('Escreve pelo menos uma keyword');return;}
+  const btn=document.getElementById('mbtn');btn.disabled=true;
+  document.getElementById('mrun').style.display='block';document.getElementById('mres').innerHTML='';
+  await fetch('/api/monitor/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kws,max_price:parseFloat(document.getElementById('mmax').value)||null,domain:document.getElementById('mdom').value})});
+  while(true){await new Promise(r=>setTimeout(r,2500));const d=await(await fetch('/api/monitor/results')).json();if(!d.running){rMon(d);break;}}
+  btn.disabled=false;document.getElementById('mrun').style.display='none';
+}
+function rMon(d){
+  const items=d.items||[];
+  if(!items.length){document.getElementById('mres').innerHTML='<div class="empty"><div class="eic">🔍</div>Sem resultados</div>';return;}
+  const bk={};items.forEach(i=>{if(!bk[i.keyword])bk[i.keyword]=[];bk[i.keyword].push(i);});
+  document.getElementById('mres').innerHTML=Object.entries(bk).map(([kw,its])=>{
+    const pr=its.map(i=>i.price).filter(p=>p>0);
+    const mn=pr.length?Math.min(...pr).toFixed(2):'—';const av=pr.length?(pr.reduce((a,b)=>a+b,0)/pr.length).toFixed(2):'—';
+    return`<div class="card"><div class="ch"><div class="ct">${kw}</div><div style="display:flex;gap:6px"><span class="bdg bg2">min €${mn}</span><span class="bdg bb">avg €${av}</span><span class="bdg bgy">${its.length}</span></div></div>${its.slice(0,6).map(i=>`<div class="mitem" onclick="window.open('${i.url}','_blank')"><img class="mph" src="${i.photo}" onerror="this.src=''" alt=""><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.title}</div><div style="font-size:11px;color:var(--text2)">${i.brand?i.brand+' · ':''}${i.condition} · @${i.seller}</div></div><div style="font-size:14px;font-weight:700;color:var(--green);flex-shrink:0">€${i.price.toFixed(2)}</div></div>`).join('')}</div>`;
+  }).join('');
+}
+
+async function startF(){
+  const kws=document.getElementById('fkw').value.split(',').map(k=>k.trim()).filter(Boolean);
+  if(!kws.length){alert('Escreve pelo menos uma keyword');return;}
+  await fetch('/api/feed/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kws,max_price:parseFloat(document.getElementById('fmax').value)||null,interval:parseFloat(document.getElementById('fspd').value)})});
+  fN=0;document.getElementById('fsbtn').disabled=true;document.getElementById('fstbtn').disabled=false;
+  document.getElementById('fbar').style.display='flex';document.getElementById('fcard').style.display='block';
+  document.getElementById('fempty').style.display='none';document.getElementById('fbartxt').textContent='A monitorizar: '+kws.join(', ');
+  if(fEs)fEs.close();
+  fEs=new EventSource('/api/feed/events');
+  fEs.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==='new_item'||m.type==='existing'){aFI(m.item,m.type==='new_item');if(m.type==='new_item'){fN++;document.getElementById('fn').textContent=fN+' novos';}}if(m.type&&m.type.startsWith('drive_'))handleDriveEvent(m);};
+}
+async function stopF(){await fetch('/api/feed/stop',{method:'POST'});if(fEs){fEs.close();fEs=null;}document.getElementById('fsbtn').disabled=false;document.getElementById('fstbtn').disabled=true;document.getElementById('fbar').style.display='none';}
+function aFI(item,isNew){
+  const list=document.getElementById('flist');const div=document.createElement('div');div.className='fitem';div.onclick=()=>window.open(item.url,'_blank');
+  div.innerHTML=`<img class="fph" src="${item.photo||''}" onerror="this.src=''" alt=""><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.title}</div><div style="font-size:11px;color:var(--text2)">${item.keyword} · @${item.seller||''} · ${item.seen_at||''}</div></div><div class="fpr">€${(item.price||0).toFixed(2)}</div>`;
+  if(isNew)list.insertBefore(div,list.firstChild);else list.appendChild(div);
+}
+
+async function loadCr(){
+  const cr=await(await fetch('/api/credentials')).json();
+  document.getElementById('crcard').innerHTML=PLATS.map(p=>{
+    const saved=cr[p.id]||{};const fields=CRF[p.id]||[];
+    return`<div class="crsec"><div style="font-size:13px;font-weight:600;color:${p.color};margin-bottom:10px">${p.name}</div><div class="alert ab" style="margin-bottom:10px;font-size:11px">${p.type}</div>${fields.map(f=>`<div class="fg" style="margin-bottom:8px"><label class="fl">${f.l}</label><input type="${f.t}" id="cr-${p.id}-${f.k}" value="${saved[f.k]||''}" placeholder="${f.l}"></div>`).join('')}</div>`;
+  }).join('');
+}
+async function saveCr(){
+  const data={};
+  PLATS.forEach(p=>{const fields=CRF[p.id]||[];data[p.id]={};fields.forEach(f=>{const v=document.getElementById(`cr-${p.id}-${f.k}`)?.value||'';data[p.id][f.k]=v;});});
+  await fetch('/api/credentials',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  alert('Guardado com sucesso ✓');
+}
+
+loadDash();setInterval(loadSt,10000);rpPlats();
+
+let drvFiles=[], drvSel=[], drvUsed=new Set();
+
+async function loadPasta(){
+  const el_setup=document.getElementById('drive-setup');
+  const el_gal=document.getElementById('drive-gallery');
+  const el_load=document.getElementById('drive-loading');
+  el_load.style.display='block';el_setup.style.display='none';el_gal.style.display='none';
+  try{
+    const d=await(await fetch('/api/drive/status')).json();
+    el_load.style.display='none';
+    if(d.connected){
+      el_gal.style.display='block';
+      document.getElementById('drive-folder-title').textContent='Google Drive — '+d.folder_name;
+      document.getElementById('drive-status-line').textContent=d.total_files+' fotos · sync a cada '+d.poll_interval+'s';
+      await loadDriveFiles();
+    }else{
+      el_setup.style.display='block';
+    }
+  }catch(e){el_load.style.display='none';el_setup.style.display='block';}
+}
+
+async function connectDrive(){
+  const btn=document.getElementById('drive-connect-btn');
+  btn.disabled=true;btn.innerHTML='<span class="sp"></span>A ligar...';
+  try{
+    const keyRaw=document.getElementById('drive-key-json').value.trim();
+    const folderId=document.getElementById('drive-folder-id').value.trim();
+    const folderName=document.getElementById('drive-folder-name').value.trim();
+    if(!keyRaw||!folderId){alert('Preenche todos os campos');btn.disabled=false;btn.innerHTML='Ligar ao Google Drive';return;}
+    let serviceKey;
+    try{serviceKey=JSON.parse(keyRaw);}catch(e){alert('JSON invalido. Certifica-te que copiaste o conteudo completo do ficheiro.');btn.disabled=false;btn.innerHTML='Ligar ao Google Drive';return;}
+    const res=await fetch('/api/drive/configure',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service_key:serviceKey,folder_id:folderId,folder_name:folderName})});
+    if(!res.ok){const err=await res.json();alert('Erro: '+(err.detail||'Verificar credenciais'));btn.disabled=false;btn.innerHTML='Ligar ao Google Drive';return;}
+    const d=await res.json();
+    alert('✅ Ligado! '+d.files_found+' foto(s) encontrada(s).');
+    loadPasta();
+  }catch(e){alert('Erro: '+e.message);}
+  btn.disabled=false;btn.innerHTML='Ligar ao Google Drive';
+}
+
+async function loadDriveFiles(){
+  const res=await(await fetch('/api/drive/files')).json();
+  drvFiles=res.files||[];
+  renderDriveGrid();
+  const sl=document.getElementById('drive-status-line');
+  if(sl)sl.textContent=drvFiles.length+' fotos · sincronizado';
+}
+
+function renderDriveGrid(){
+  const grid=document.getElementById('drv-grid');
+  const empty=document.getElementById('drv-empty');
+  if(!drvFiles.length){grid.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  grid.innerHTML=drvFiles.map((f,i)=>{
+    const used=drvUsed.has(f.id);
+    const si=drvSel.findIndex(x=>x.id===f.id);
+    const sel=si!==-1;
+    return '<div onclick="tDrv('+i+')" style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;'+(used&&!sel?'opacity:0.3;':'')+(sel?'outline:3px solid var(--blue);outline-offset:2px;':'')+'">'
+      +'<img src="'+f.thumbnail+'" style="width:100%;height:100%;object-fit:cover" loading="lazy">'
+      +(sel?'<div style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">'+(si+1)+'</div>':'')
+      +(used&&!sel?'<div style="position:absolute;inset:0;background:rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:18px">✓</div>':'')
+      +'</div>';
+  }).join('');
+}
+
+function tDrv(i){
+  const f=drvFiles[i];
+  if(drvUsed.has(f.id)&&!drvSel.find(x=>x.id===f.id))return;
+  const idx=drvSel.findIndex(x=>x.id===f.id);
+  if(idx===-1)drvSel.push(f);else drvSel.splice(idx,1);
+  renderDriveGrid();rDrvSide();
+}
+
+function rDrvSide(){
+  const prev=document.getElementById('drv-sel-prev');
+  const cnt=document.getElementById('drv-count');
+  const btn=document.getElementById('drv-create');
+  const clr=document.getElementById('drv-clear');
+  if(!drvSel.length){
+    prev.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:14px;color:var(--text2);font-size:12px">Clica nas fotos para seleccionar</div>';
+    cnt.textContent='';btn.disabled=true;clr.style.display='none';return;
+  }
+  clr.style.display='inline-flex';btn.disabled=false;
+  cnt.textContent=drvSel.length+' foto(s)';
+  prev.innerHTML=drvSel.map(f=>'<img src="'+f.thumbnail+'" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px">').join('');
+}
+
+function clearSelDrive(){drvSel=[];renderDriveGrid();rDrvSide();}
+
+async function createDriveProduct(){
+  if(!drvSel.length)return;
+  const btn=document.getElementById('drv-create');
+  btn.disabled=true;btn.innerHTML='<span class="sp"></span>A criar...';
+  const title=document.getElementById('drv-title').value.trim();
+  try{
+    await fetch('/api/drive/create',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({title,file_ids:drvSel.map(f=>f.id)})});
+    drvSel.forEach(f=>drvUsed.add(f.id));drvSel=[];
+    document.getElementById('drv-title').value='';
+    renderDriveGrid();rDrvSide();loadL();
+    btn.innerHTML='✅ Criado!';
+    setTimeout(()=>{btn.innerHTML='Criar produto';btn.disabled=false;},1500);
+  }catch(e){btn.innerHTML='Criar produto';btn.disabled=false;alert('Erro: '+e.message);}
+}
+
+async function syncDrive(){
+  await fetch('/api/drive/sync',{method:'POST'});
+  await loadDriveFiles();
+}
+
+// SSE: actualizar galeria em tempo real quando chegam fotos novas
+const _origEsMsg = typeof fEs !== 'undefined' ? null : null;
+function handleDriveEvent(msg){
+  if(msg.type==='drive_added'){
+    const f=msg.file;
+    if(!drvFiles.find(x=>x.id===f.id)){
+      drvFiles.unshift(f);
+      renderDriveGrid();
+      document.getElementById('drive-status-line').textContent=drvFiles.length+' fotos · actualizado agora';
+    }
+  }else if(msg.type==='drive_removed'){
+    drvFiles=drvFiles.filter(x=>x.id!==msg.file?.id);
+    renderDriveGrid();
+  }
+}
+
+async function loadSync(){await Promise.all([loadSyncSt(),loadNotifs()]);}
+async function loadSyncSt(){
+  try{
+    const d=await(await fetch('/api/sync/status')).json();
+    document.getElementById('sy-active').textContent=d.active;
+    document.getElementById('sy-sold').textContent=d.sold;
+    document.getElementById('sy-next').textContent=d.next_auto||'--';
+    document.getElementById('sy-run').style.display=d.running?'flex':'none';
+    const w=document.getElementById('sy-olxwarn');
+    if(d.olx_warnings&&d.olx_warnings.length){
+      w.style.display='block';
+      w.innerHTML='<div style="font-size:12px;font-weight:600;color:#854F0B;margin-bottom:8px">A expirar em breve</div>'+
+        d.olx_warnings.map(x=>'<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #f6d7a0"><span><b style="color:#854F0B;text-transform:uppercase;font-size:10px">'+x.platform+'</b> '+x.title+'</span><span style="color:var(--red);font-weight:600">'+x.expires_in+' dia(s)</span></div>').join('');
+    }else{w.style.display='none';}
+    if(d.last_log){const l=d.last_log;document.getElementById('sy-lastlog').textContent='Ultimo sync: '+(l.started||'').slice(11,16)+' -- '+( l.checked||0)+' verificados, '+(l.sold||[]).length+' vendidos, '+(l.relisted||[]).length+' relistados';}
+  }catch(e){}
+}
+async function runSync(){
+  const btn=document.getElementById('sy-btn');btn.disabled=true;btn.innerHTML='<span class="sp"></span>A verificar...';
+  await fetch('/api/sync/run',{method:'POST'});
+  for(let i=0;i<60;i++){
+    await new Promise(r=>setTimeout(r,3000));
+    const d=await(await fetch('/api/sync/status')).json();
+    await loadSyncSt();await loadNotifs();
+    if(!d.running)break;
+  }
+  btn.disabled=false;btn.innerHTML='Verificar agora';
+}
+async function importP(platform){
+  const btn=document.getElementById('imp-'+platform);
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="sp spd"></span>A importar...';}
+  await fetch('/api/import/'+platform,{method:'POST'});
+  for(let i=0;i<40;i++){
+    await new Promise(r=>setTimeout(r,2500));
+    const d=await(await fetch('/api/import/results/'+platform)).json();
+    if(d.status==='done'||d.status==='error'){
+      if(btn){btn.disabled=false;btn.innerHTML=d.status==='done'?'Importado '+d.imported:'Erro -- tentar de novo';}
+      await loadNotifs();loadL();break;
+    }
+  }
+}
+async function loadNotifs(){
+  try{
+    const ns=await(await fetch('/api/notifications')).json();
+    const el=document.getElementById('notif-list');
+    if(!ns.length){el.innerHTML='<div class="empty"><div class="eic">🔔</div>Sem notificacoes ainda</div>';return;}
+    const ic={item_sold_done:'✅',olx_warning:'⏰',olx_relist:'🔄',item_removed:'⚠️',sync_done:'🔍',import_done:'📥'};
+    const co={item_sold_done:'var(--green)',olx_warning:'var(--amber)',item_removed:'var(--red)',sync_done:'var(--blue)',import_done:'var(--green)',olx_relist:'var(--blue)'};
+    el.innerHTML=ns.slice(0,20).map(n=>'<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="font-size:20px;flex-shrink:0">'+(ic[n.type]||'📣')+'</div><div style="flex:1"><div style="font-size:13px;color:'+(co[n.type]||'var(--text2)')+'">'+n.message+'</div><div style="font-size:11px;color:var(--text2)">'+n.at+'</div></div></div>').join('');
+  }catch(e){}
+}
+
+</script>
+</body>
+</html>

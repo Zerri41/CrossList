@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+aiohttp
+playwright
+python-multipart
+anthropic
+python-multipart
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
