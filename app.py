@@ -156,10 +156,18 @@ async def _run_publish(req: PublishRequest, listing_data: dict, log_entry: dict)
                 log_entry["results"][platform] = {"success": bool(url), "url": url or "publicado"}
 
         except Exception as e:
-            log_entry["results"][platform] = {"success": False, "error": str(e)[:200]}
+            err_msg = str(e)[:500]
+            print(f"[publish:{platform}] EXCEPÇÃO: {err_msg}")
+            log_entry["results"][platform] = {"success": False, "error": err_msg}
 
     log_entry["status"] = "done"
     log_entry["finished"] = datetime.now().isoformat()
+    # Log results explicitly so they appear in Render logs
+    for plat, res in log_entry["results"].items():
+        if res.get("success"):
+            print(f"[publish] OK: {plat} — {res.get('url','')}")
+        else:
+            print(f"[publish] ERRO: {plat} — {res.get('error','sem detalhe')}")
 
     # Actualizar listing
     f = STORE / f"{listing_data.get('id','')}.json"
