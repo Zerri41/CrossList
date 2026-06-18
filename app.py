@@ -187,43 +187,50 @@ async def _human_type(page, sel, text):
 
 async def _publish_vinted(page, l, email, password, ctx):
     import re
-    await page.goto("https://www.vinted.pt/login", wait_until="domcontentloaded")
-    await asyncio.sleep(3)
+    creds = json.loads(CREDS_FILE.read_text()) if CREDS_FILE.exists() else {}
+    session_cookie = creds.get("vinted", {}).get("session_cookie", "")
 
-    # Aceitar cookies — vários selectores possíveis
-    for sel in ['[data-testid="consent-accept-all"]','#onetrust-accept-btn-handler',
-                'button:has-text("Aceitar tudo")','button:has-text("Accept all")']:
-        try: await page.click(sel, timeout=3000); await asyncio.sleep(1); break
-        except: pass
-
-    # Login — tentar múltiplos selectores (Vinted muda frequentemente)
-    email_sels  = ['[data-testid="username"]','input[name="username"]',
-                   'input[type="email"]','input[name="email"]','#username','#email',
-                   'input[autocomplete="email"]','input[autocomplete="username"]']
-    pass_sels   = ['[data-testid="password"]','input[name="password"]',
-                   'input[type="password"]','#password']
-    submit_sels = ['[data-testid="login-submit"]','button[type="submit"]',
-                   'button:has-text("Entrar")','button:has-text("Login")',
-                   'button:has-text("Sign in")','button:has-text("Iniciar sessão")']
-
-    for sel in email_sels:
-        try:
-            await page.wait_for_selector(sel, timeout=6000)
-            await _human_type(page, sel, email)
-            print(f"[vinted] email field: {sel}")
-            break
-        except: pass
-
-    for sel in pass_sels:
-        try: await _human_type(page, sel, password); break
-        except: pass
-
-    for sel in submit_sels:
-        try: await page.click(sel, timeout=3000); break
-        except: pass
-
-    await asyncio.sleep(4)
-    print(f"[vinted] url após login: {page.url}")
+    if session_cookie:
+        # Usar sessão existente — evita login de datacenter bloqueado
+        print("[vinted] A usar session cookie...")
+        await ctx.add_cookies([{
+            "name": "_vinted_fr_session",
+            "value": session_cookie,
+            "domain": ".vinted.pt",
+            "path": "/",
+            "secure": True,
+            "httpOnly": True,
+        }])
+        await page.goto("https://www.vinted.pt", wait_until="domcontentloaded")
+        await asyncio.sleep(2)
+        print(f"[vinted] url com cookie: {page.url}")
+    else:
+        # Fallback: tentar login normal
+        print("[vinted] Sem cookie — a tentar login...")
+        await page.goto("https://www.vinted.pt/login", wait_until="domcontentloaded")
+        await asyncio.sleep(3)
+        for sel in ['[data-testid="consent-accept-all"]','#onetrust-accept-btn-handler',
+                    'button:has-text("Aceitar tudo")','button:has-text("Accept all")']:
+            try: await page.click(sel, timeout=3000); await asyncio.sleep(1); break
+            except: pass
+        email_sels = ['[data-testid="username"]','input[name="username"]',
+                      'input[type="email"]','input[name="email"]','#username',
+                      'input[autocomplete="email"]','input[autocomplete="username"]']
+        for sel in email_sels:
+            try:
+                await page.wait_for_selector(sel, timeout=6000)
+                await _human_type(page, sel, email)
+                print(f"[vinted] email field: {sel}")
+                break
+            except: pass
+        for sel in ['[data-testid="password"]','input[name="password"]','input[type="password"]']:
+            try: await _human_type(page, sel, password); break
+            except: pass
+        for sel in ['[data-testid="login-submit"]','button[type="submit"]','button:has-text("Entrar")']:
+            try: await page.click(sel, timeout=3000); break
+            except: pass
+        await asyncio.sleep(4)
+        print(f"[vinted] url após login: {page.url}")
 
     # Ir para criar anúncio
     await page.goto("https://www.vinted.pt/member/new_item", wait_until="domcontentloaded")
