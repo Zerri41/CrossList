@@ -188,28 +188,75 @@ async def _human_type(page, sel, text):
 async def _publish_vinted(page, l, email, password, ctx):
     import re
     await page.goto("https://www.vinted.pt/login", wait_until="domcontentloaded")
-    await asyncio.sleep(2)
-    try: await page.click('[data-testid="consent-accept-all"]', timeout=3000)
-    except: pass
-    if "login" in page.url:
-        await _human_type(page, '[data-testid="username"]', email)
-        await _human_type(page, '[data-testid="password"]', password)
-        await page.click('[data-testid="login-submit"]')
-        await asyncio.sleep(3)
+    await asyncio.sleep(3)
+
+    # Aceitar cookies — vários selectores possíveis
+    for sel in ['[data-testid="consent-accept-all"]','#onetrust-accept-btn-handler',
+                'button:has-text("Aceitar tudo")','button:has-text("Accept all")']:
+        try: await page.click(sel, timeout=3000); await asyncio.sleep(1); break
+        except: pass
+
+    # Login — tentar múltiplos selectores (Vinted muda frequentemente)
+    email_sels  = ['[data-testid="username"]','input[name="username"]',
+                   'input[type="email"]','input[name="email"]','#username','#email',
+                   'input[autocomplete="email"]','input[autocomplete="username"]']
+    pass_sels   = ['[data-testid="password"]','input[name="password"]',
+                   'input[type="password"]','#password']
+    submit_sels = ['[data-testid="login-submit"]','button[type="submit"]',
+                   'button:has-text("Entrar")','button:has-text("Login")',
+                   'button:has-text("Sign in")','button:has-text("Iniciar sessão")']
+
+    for sel in email_sels:
+        try:
+            await page.wait_for_selector(sel, timeout=6000)
+            await _human_type(page, sel, email)
+            print(f"[vinted] email field: {sel}")
+            break
+        except: pass
+
+    for sel in pass_sels:
+        try: await _human_type(page, sel, password); break
+        except: pass
+
+    for sel in submit_sels:
+        try: await page.click(sel, timeout=3000); break
+        except: pass
+
+    await asyncio.sleep(4)
+    print(f"[vinted] url após login: {page.url}")
+
+    # Ir para criar anúncio
     await page.goto("https://www.vinted.pt/member/new_item", wait_until="domcontentloaded")
-    await asyncio.sleep(2)
-    try: await _human_type(page, '[data-testid="item-title-input"]', l["title"])
-    except: pass
-    try: await _human_type(page, '[data-testid="item-description-input"]', l.get("description",""))
-    except: pass
-    try: await _human_type(page, '[data-testid="item-price-input"]', str(l["price"]))
-    except: pass
+    await asyncio.sleep(3)
+    print(f"[vinted] página anúncio: {page.url}")
+
+    # Título
+    for sel in ['[data-testid="item-title-input"]','input[name="title"]','#title']:
+        try: await _human_type(page, sel, l["title"]); break
+        except: pass
+
+    # Descrição
+    for sel in ['[data-testid="item-description-input"]','textarea[name="description"]','#description']:
+        try: await _human_type(page, sel, l.get("description","")); break
+        except: pass
+
+    # Preço
+    for sel in ['[data-testid="item-price-input"]','input[name="price"]','#price']:
+        try: await _human_type(page, sel, str(l["price"])); break
+        except: pass
+
     await asyncio.sleep(1)
-    try:
-        await page.click('[data-testid="submit-item-button"]')
-        await page.wait_for_url(re.compile(r"/items/\d+"), timeout=15000)
-        return page.url
-    except: return None
+
+    # Submeter
+    for sel in ['[data-testid="submit-item-button"]','button[type="submit"]',
+                'button:has-text("Publicar")','button:has-text("Upload item")']:
+        try:
+            await page.click(sel, timeout=5000)
+            await page.wait_for_url(re.compile(r"/items/\d+"), timeout=20000)
+            print(f"[vinted] publicado: {page.url}")
+            return page.url
+        except: pass
+    return None
 
 async def _publish_wallapop(page, l, email, password):
     await page.goto("https://es.wallapop.com/login", wait_until="domcontentloaded")
