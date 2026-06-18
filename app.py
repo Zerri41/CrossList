@@ -449,6 +449,11 @@ Responde APENAS em JSON válido sem markdown.
         raw = msg.content[0].text
         clean = re.sub(r"```json|```","",raw).strip()
         return json.loads(clean)
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ai/analyze] Erro: {e}")
+        raise HTTPException(500, str(e))
 
 # ════════════════════════════════════════════════════════
 # SYNC & IMPORT ENDPOINTS
