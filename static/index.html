@@ -834,12 +834,26 @@ async function loadL(){
     const plats=Object.keys(l.platforms||{});
     const pills=plats.length?plats.map(p=>`<span class="pp pp-${p}">${p}</span>`).join(''):'<span class="bdg bgy">rascunho</span>';
     const img=l.images?.[0]?`<img class="limg" src="${l.images[0]}" alt="">`:`<div class="limg">📦</div>`;
-    return`<div class="lcard">${img}<div style="flex:1;min-width:0"><div class="ltitle">${l.title}</div><div class="lmeta"><span class="bdg bb">€${l.price}</span><span class="bdg bgy">${l.condition}</span>${l.brand?`<span style="font-size:11px;color:var(--text2)">${l.brand}</span>`:''}</div><div class="ppills">${pills}</div></div><button class="btn br bsm" onclick="delL('${l.id}')">🗑</button></div>`;
+    return`<div class="lcard">${img}<div style="flex:1;min-width:0"><div class="ltitle">${l.title}</div><div class="lmeta"><span class="bdg bb">€${l.price}</span><span class="bdg bgy">${l.condition}</span>${l.brand?`<span style="font-size:11px;color:var(--text2)">${l.brand}</span>`:''}</div><div class="ppills">${pills}</div></div><div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0"><button class="btn bp bsm" onclick='copyVinted(${JSON.stringify(JSON.stringify(l))})'>📋 Copiar</button><button class="btn br bsm" onclick="delL('${l.id}')">🗑</button></div></div>`;
   }).join('');
   const s=document.getElementById('psel');
   s.innerHTML='<option value="">— Seleccionar —</option>'+listings.map(l=>`<option value="${l.id}">${l.title} (€${l.price})</option>`).join('');
 }
 async function delL(id){if(!confirm('Eliminar?'))return;await fetch('/api/listings/'+id,{method:'DELETE'});loadL();}
+
+function copyVinted(lJson){
+  const l=JSON.parse(lJson);
+  const d=l.descriptions||{};
+  const desc=d.vinted||l.description||'';
+  const txt='TÍTULO:\n'+l.title+'\n\nPREÇO: €'+l.price+'\n\nMARCA: '+(l.brand||'—')+'\n\nDESCRIÇÃO:\n'+desc+'\n\nTAGS: '+(l.tags||[]).join(', ');
+  navigator.clipboard.writeText(txt).then(()=>{
+    // abrir Vinted em nova aba
+    window.open('https://www.vinted.pt/items/new','_blank');
+    alert('✅ Copiado! O Vinted abriu numa nova aba — cola (Ctrl+V / colar) os campos. As fotos tens de adicionar manualmente.');
+  }).catch(()=>{
+    prompt('Copia este texto para o Vinted:', txt);
+  });
+}
 
 function rpPlats(){
   document.getElementById('pplats').innerHTML=PLATS.map(p=>`<div class="pltog"><div class="pinfo"><div class="pname" style="color:${p.color}">${p.name}</div><div class="ptype">${p.type}</div></div><div class="tgl ${tog[p.id]?'on':''}" id="tg-${p.id}" onclick="togP('${p.id}')"></div></div>`).join('');
