@@ -237,32 +237,87 @@ async def _publish_vinted(page, l, email, password, ctx):
     await asyncio.sleep(3)
     print(f"[vinted] página anúncio: {page.url}")
 
+    # DIAGNÓSTICO: listar todos os inputs/textareas que existem na página
+    try:
+        fields_found = await page.evaluate("""() => {
+            const out = [];
+            document.querySelectorAll('input, textarea, select, button').forEach(el => {
+                out.push({
+                    tag: el.tagName.toLowerCase(),
+                    type: el.type || '',
+                    name: el.name || '',
+                    id: el.id || '',
+                    testid: el.getAttribute('data-testid') || '',
+                    placeholder: el.placeholder || '',
+                    text: (el.innerText || '').slice(0, 30)
+                });
+            });
+            return out;
+        }""")
+        print(f"[vinted] CAMPOS NA PÁGINA ({len(fields_found)}):")
+        for f in fields_found:
+            print(f"[vinted]   {f['tag']} type={f['type']} name='{f['name']}' id='{f['id']}' testid='{f['testid']}' ph='{f['placeholder']}' txt='{f['text']}'")
+    except Exception as e:
+        print(f"[vinted] erro ao listar campos: {e}")
+
     # Título
-    for sel in ['[data-testid="item-title-input"]','input[name="title"]','#title']:
-        try: await _human_type(page, sel, l["title"]); break
+    title_ok = False
+    for sel in ['[data-testid="item-title-input"]','input[name="title"]','#title',
+                'input[placeholder*="título" i]','input[placeholder*="title" i]']:
+        try:
+            await _human_type(page, sel, l["title"])
+            print(f"[vinted] ✓ título preenchido via: {sel}")
+            title_ok = True
+            break
         except: pass
+    if not title_ok:
+        print("[vinted] ✗ FALHOU no campo título")
 
     # Descrição
-    for sel in ['[data-testid="item-description-input"]','textarea[name="description"]','#description']:
-        try: await _human_type(page, sel, l.get("description","")); break
+    desc_ok = False
+    for sel in ['[data-testid="item-description-input"]','textarea[name="description"]','#description',
+                'textarea[placeholder*="descri" i]','textarea']:
+        try:
+            await _human_type(page, sel, l.get("description",""))
+            print(f"[vinted] ✓ descrição preenchida via: {sel}")
+            desc_ok = True
+            break
         except: pass
+    if not desc_ok:
+        print("[vinted] ✗ FALHOU no campo descrição")
 
     # Preço
-    for sel in ['[data-testid="item-price-input"]','input[name="price"]','#price']:
-        try: await _human_type(page, sel, str(l["price"])); break
+    price_ok = False
+    for sel in ['[data-testid="item-price-input"]','input[name="price"]','#price',
+                'input[placeholder*="preço" i]','input[placeholder*="price" i]','input[type="number"]']:
+        try:
+            await _human_type(page, sel, str(l["price"]))
+            print(f"[vinted] ✓ preço preenchido via: {sel}")
+            price_ok = True
+            break
         except: pass
+    if not price_ok:
+        print("[vinted] ✗ FALHOU no campo preço")
 
     await asyncio.sleep(1)
 
     # Submeter
+    submit_ok = False
     for sel in ['[data-testid="submit-item-button"]','button[type="submit"]',
-                'button:has-text("Publicar")','button:has-text("Upload item")']:
+                'button:has-text("Publicar")','button:has-text("Upload item")',
+                'button:has-text("Adicionar")','button:has-text("Enviar")']:
         try:
             await page.click(sel, timeout=5000)
+            print(f"[vinted] ✓ botão submeter clicado via: {sel}")
+            submit_ok = True
             await page.wait_for_url(re.compile(r"/items/\d+"), timeout=20000)
-            print(f"[vinted] publicado: {page.url}")
+            print(f"[vinted] ✓✓ PUBLICADO: {page.url}")
             return page.url
         except: pass
+    if not submit_ok:
+        print("[vinted] ✗ FALHOU no botão submeter")
+    else:
+        print(f"[vinted] botão clicado mas URL não mudou — url actual: {page.url}")
     return None
 
 async def _publish_wallapop(page, l, email, password):
