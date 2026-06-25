@@ -188,10 +188,16 @@ textarea{resize:vertical}
       <div style="font-size:12px;color:var(--text2)">JPG, PNG, WEBP · máx 10MB</div>
     </div>
     <div class="pprev" id="pprev"></div>
-    <div style="margin-top:16px;display:flex;align-items:center;gap:12px" id="aibtnw" style="display:none">
+    <div style="margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap" id="aibtnw">
       <button class="btn bai" onclick="runAI()" id="aibtn" disabled>✨ Preencher com IA</button>
-      <span style="font-size:12px;color:var(--text2)">a IA analisa a foto e cria o anúncio completo</span>
+      <button class="btn bs" onclick="manualFill()" id="manbtn">✍️ Preencher manualmente (sem IA, grátis)</button>
+      <span style="font-size:12px;color:var(--text2)">a IA analisa a foto, ou preenches tu sem custo</span>
     </div>
+  </div>
+
+  <!-- Botão manual sempre visível mesmo sem foto -->
+  <div style="margin-top:10px">
+    <button class="btn bs bsm" onclick="manualFill()">✍️ Criar anúncio em branco (sem foto, sem IA)</button>
   </div>
 
   <!-- FASE 2 (loading) -->
@@ -202,29 +208,49 @@ textarea{resize:vertical}
     <div style="margin-top:16px;display:flex;justify-content:center"><div class="sp spd"></div></div>
   </div>
 
-  <!-- FASE 3 (resultado) -->
+  <!-- FASE 3 (resultado / formulário completo) -->
   <div id="f3" style="display:none">
-    <div class="aipanel">
+    <div class="aipanel" id="aipanel">
       <div style="font-size:12px;font-weight:600;color:#5B21B6;margin-bottom:6px;display:flex;align-items:center;gap:6px">✨ Criado pela IA — como vendedor experiente destes marketplaces</div>
       <div class="aihook" id="aihook"></div>
       <div class="ainote" id="ainote"></div>
     </div>
-    <div class="fg"><label class="fl">Título <span class="bdg bai2">✨ IA</span></label><input type="text" id="ft"></div>
+
+    <div class="stitle">Informação básica</div>
+    <div class="fg"><label class="fl">Título *</label><input type="text" id="ft" placeholder="ex: Shimano MT200 Hydraulic Brake"></div>
     <div class="fr">
-      <div class="fg"><label class="fl">Marca <span class="bdg bai2">✨ IA</span></label><input type="text" id="fb"></div>
-      <div class="fg"><label class="fl">Condição <span class="bdg bai2">✨ IA</span></label>
-        <select id="fc"><option value="new">Novo</option><option value="very_good">Muito bom</option><option value="good">Bom estado</option><option value="acceptable">Aceitável</option></select></div>
+      <div class="fg"><label class="fl">Marca</label><input type="text" id="fb" placeholder="ex: Shimano"></div>
+      <div class="fg"><label class="fl">Condição</label>
+        <select id="fc"><option value="new_with_tags">Novo com etiquetas</option><option value="new">Novo sem etiquetas</option><option value="very_good">Muito bom</option><option value="good">Bom estado</option><option value="acceptable">Satisfatório</option></select></div>
     </div>
     <div class="fr">
       <div class="fg">
-        <label class="fl" style="display:flex;justify-content:space-between"><span>💶 Preço (€) <span style="color:var(--red)">*</span></span><span style="color:var(--amber);font-weight:600;font-size:11px">← só tu defines</span></label>
+        <label class="fl"><span>💶 Preço (€) *</span></label>
         <input type="number" id="fp" placeholder="0.00" style="font-size:18px;font-weight:700;border-color:var(--amber);border-width:2px">
       </div>
-      <div class="fg"><label class="fl">Categoria <span class="bdg bai2">✨ IA</span></label>
-        <select id="fcat"><option>Componentes mobilidade</option><option>Travões</option><option>Motores e-bike</option><option>Cargo bike</option><option>Automotive</option><option>Electrónica</option><option>Desporto</option><option>Casa</option><option>Outro</option></select></div>
+      <div class="fg"><label class="fl">Categoria</label>
+        <select id="fcat"><option>Componentes mobilidade</option><option>Travões</option><option>Motores e-bike</option><option>Cargo bike</option><option>Automotive</option><option>Electrónica</option><option>Desporto</option><option>Roupa</option><option>Calçado</option><option>Acessórios</option><option>Casa</option><option>Outro</option></select></div>
     </div>
+
+    <div class="stitle">Campos Vinted</div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Tamanho</label><input type="text" id="fsize" placeholder="ex: M, 42, Único"></div>
+      <div class="fg"><label class="fl">Cor</label>
+        <select id="fcolor"><option value="">—</option><option>Preto</option><option>Branco</option><option>Cinzento</option><option>Azul</option><option>Vermelho</option><option>Verde</option><option>Amarelo</option><option>Laranja</option><option>Rosa</option><option>Roxo</option><option>Castanho</option><option>Bege</option><option>Dourado</option><option>Prateado</option><option>Multicolor</option></select></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Material</label><input type="text" id="fmaterial" placeholder="ex: Alumínio, Algodão"></div>
+      <div class="fg"><label class="fl">Unidade / Quantidade</label><input type="number" id="fqty" value="1" min="1"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Tipo de pacote (envio)</label>
+        <select id="fpackage"><option value="">—</option><option>Pequeno (até 1kg)</option><option>Médio (1-2kg)</option><option>Grande (2-5kg)</option><option>Extra grande (5kg+)</option></select></div>
+      <div class="fg"><label class="fl">Etiqueta de exclusividade</label>
+        <select id="fexcl"><option value="">Não</option><option>Edição limitada</option><option>Vintage</option><option>Handmade</option></select></div>
+    </div>
+
+    <div class="stitle">Descrição</div>
     <div class="fg">
-      <label class="fl">Descrição <span class="bdg bai2">✨ IA</span> <span style="font-size:11px;color:var(--text2);font-weight:400">— versão diferente por plataforma</span></label>
       <div class="dtabs" id="dtabs">
         <button class="dtab active" onclick="sdesc('geral',this)">Geral</button>
         <button class="dtab" onclick="sdesc('vinted',this)">Vinted</button>
@@ -232,16 +258,21 @@ textarea{resize:vertical}
         <button class="dtab" onclick="sdesc('wallapop',this)">Wallapop</button>
         <button class="dtab" onclick="sdesc('ebay',this)">eBay (EN)</button>
       </div>
-      <textarea id="fdesc" style="height:90px"></textarea>
+      <textarea id="fdesc" style="height:90px" placeholder="Descreve o artigo: estado, o que inclui, compatibilidade..."></textarea>
     </div>
     <div class="fg">
-      <label class="fl">Tags <span class="bdg bai2">✨ IA</span></label>
+      <label class="fl">Tags</label>
       <div class="twrap" id="twrap" onclick="document.getElementById('tin').focus()">
         <input class="tin" id="tin" placeholder="adicionar tag..." onkeydown="atag(event)">
       </div>
     </div>
-    <div class="fg"><label class="fl">Localização</label><input type="text" id="floc" value="Porto"></div>
-    <div style="display:flex;gap:8px;margin-top:4px">
+    <div class="fr">
+      <div class="fg"><label class="fl">Localização</label><input type="text" id="floc" value="Porto"></div>
+      <div class="fg"><label class="fl">Portes pagos por</label>
+        <select id="fship"><option>Comprador</option><option>Vendedor</option></select></div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:14px">
       <button class="btn bs" onclick="resetNovo()">← Recomeçar</button>
       <button class="btn bp" onclick="saveL()" style="flex:1">💾 Guardar anúncio</button>
     </div>
@@ -751,6 +782,7 @@ let aidx=0,aiiv=null;
 
 async function runAI(){
   if(!photos.length)return;
+  document.getElementById('aipanel').style.display='block';
   document.getElementById('f1').style.display='none';
   document.getElementById('f2').style.display='block';
   document.getElementById('f3').style.display='none';
@@ -797,8 +829,27 @@ function resetNovo(){
   document.getElementById('f1').style.display='block';
   document.getElementById('f2').style.display='none';
   document.getElementById('f3').style.display='none';
-  document.getElementById('aibtnw').style.display='none';
+  document.getElementById('aibtnw').style.display='flex';
   setStep(1);
+}
+
+function manualFill(){
+  // Abrir formulário em branco, sem IA
+  aiD={_d:{geral:'',vinted:'',olx:'',wallapop:'',ebay:''}};
+  tags=[];
+  document.getElementById('f1').style.display='none';
+  document.getElementById('f2').style.display='none';
+  document.getElementById('f3').style.display='block';
+  // Esconder painel da IA
+  document.getElementById('aipanel').style.display='none';
+  // Limpar campos
+  ['ft','fb','fp','fsize','fmaterial','fdesc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('fqty').value='1';
+  document.getElementById('floc').value='Porto';
+  descKey='geral';
+  rTags();
+  setStep(3);
+  setTimeout(()=>document.getElementById('ft').focus(),200);
 }
 
 function atag(e){if(e.key!=='Enter'&&e.key!==',')return;e.preventDefault();const v=e.target.value.trim();if(v&&!tags.includes(v)){tags.push(v);rTags();}e.target.value='';}
@@ -815,10 +866,14 @@ async function saveL(){
   if(!price||price<=0){document.getElementById('fp').focus();alert('Define o preço');return;}
   const title=document.getElementById('ft').value;if(!title){alert('Título obrigatório');return;}
   if(aiD._d)aiD._d[descKey]=document.getElementById('fdesc').value;
-  const data={title,price,brand:document.getElementById('fb').value,condition:document.getElementById('fc').value,
-    description:aiD._d?.geral||document.getElementById('fdesc').value,
-    descriptions:aiD._d||{},category:document.getElementById('fcat').value,
-    location:document.getElementById('floc').value,tags,
+  const gv=id=>{const el=document.getElementById(id);return el?el.value:'';};
+  const data={title,price,brand:gv('fb'),condition:gv('fc'),
+    description:aiD._d?.geral||gv('fdesc'),
+    descriptions:aiD._d||{},category:gv('fcat'),
+    location:gv('floc'),tags,
+    size:gv('fsize'),color:gv('fcolor'),material:gv('fmaterial'),
+    quantity:gv('fqty'),package_type:gv('fpackage'),exclusivity:gv('fexcl'),
+    shipping_payer:gv('fship'),
     images:photos.map(p=>p.prev),sku:'',status:'draft',platforms:{},
     ai_hook:document.getElementById('aihook').textContent||''};
   await fetch('/api/listings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
