@@ -45,6 +45,12 @@ class Listing(BaseModel):
     description: str = ""; brand: str = ""; category: str = "Componentes mobilidade"
     location: str = "Porto"; tags: list[str] = []; images: list[str] = []
     sku: str = ""; status: str = "draft"; platforms: dict = {}; created_at: str = ""
+    # Campos Vinted completos
+    descriptions: dict = {}; ai_hook: str = ""
+    size: str = ""; color: str = ""; material: str = ""; quantity: str = "1"
+    package_type: str = ""; exclusivity: str = ""; shipping_payer: str = "Comprador"
+    image_paths: list[str] = []; drive_file_ids: list[str] = []
+    drive_file_id: str = ""; folder_path: str = ""; imported_from: str = ""
 
 @app.get("/api/listings")
 async def get_listings():
@@ -233,9 +239,27 @@ async def _publish_vinted(page, l, email, password, ctx):
         print(f"[vinted] url após login: {page.url}")
 
     # Ir para criar anúncio
-    await page.goto("https://www.vinted.pt/member/new_item", wait_until="domcontentloaded")
-    await asyncio.sleep(3)
+    await page.goto("https://www.vinted.pt/member/new_item", wait_until="networkidle")
+    await asyncio.sleep(6)
     print(f"[vinted] página anúncio: {page.url}")
+
+    # Forçar render: scroll + esperar por qualquer input aparecer
+    try:
+        await page.evaluate("window.scrollTo(0, 300)")
+        await asyncio.sleep(1)
+        await page.wait_for_selector("input, textarea", timeout=10000)
+        await asyncio.sleep(2)
+    except Exception as e:
+        print(f"[vinted] nenhum input apareceu apos espera: {e}")
+
+    # Dump de um pedaco do HTML para perceber o que carregou
+    try:
+        body_text = await page.evaluate("() => document.body.innerText.slice(0, 300)")
+        print(f"[vinted] TEXTO DA PAGINA: {body_text}")
+        title_tag = await page.title()
+        print(f"[vinted] TITULO DA PAGINA: {title_tag}")
+    except Exception as e:
+        print(f"[vinted] erro dump: {e}")
 
     # DIAGNÓSTICO: listar todos os inputs/textareas que existem na página
     try:
