@@ -231,6 +231,14 @@ textarea{resize:vertical}
       <div class="fg"><label class="fl">Categoria</label>
         <select id="fcat"><option>Componentes mobilidade</option><option>Travões</option><option>Motores e-bike</option><option>Cargo bike</option><option>Automotive</option><option>Electrónica</option><option>Desporto</option><option>Roupa</option><option>Calçado</option><option>Acessórios</option><option>Casa</option><option>Outro</option></select></div>
     </div>
+    <div class="fr">
+    <div class="fg">
+      <label class="fl">Categoria Vinted — pesquisa e selecciona</label>
+      <input type="text" id="fcatsearch" placeholder="escreve: brakes, motor, jacket..." oninput="searchCat(this.value)" autocomplete="off">
+      <div id="catresults" style="display:none;border:1px solid var(--border);border-radius:8px;margin-top:4px;max-height:200px;overflow-y:auto;background:#fff"></div>
+      <div id="catselected" style="display:none;margin-top:6px;padding:8px 10px;background:var(--lgreen);border-radius:8px;font-size:12px;color:var(--green)"></div>
+      <input type="hidden" id="fcatid"><input type="hidden" id="fcatpath"><input type="hidden" id="fcatterm">
+    </div>
 
     <div class="stitle">Campos Vinted</div>
     <div class="fr">
@@ -294,10 +302,13 @@ textarea{resize:vertical}
   <select id="psel" style="margin-bottom:14px"><option value="">— Seleccionar anúncio —</option></select>
   <div class="stitle">Plataformas — activa onde queres publicar</div>
   <div class="card"><div class="cb" id="pplats"></div></div>
-  <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer;margin-bottom:14px">
-    <input type="checkbox" id="pvis" style="width:auto"> Mostrar o browser a trabalhar (útil na 1ª vez para confirmar)
+  <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:8px;padding:10px;background:var(--lgreen);border-radius:8px">
+    <input type="checkbox" id="pdraft" checked style="width:auto"> <b>Modo rascunho</b> — cria como rascunho no Vinted (seguro para testar). Desactiva para publicar a sério.
   </label>
-  <button class="btn bp" onclick="doPublish()" id="pbtn">🚀 Publicar agora em todos</button>
+  <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer;margin-bottom:14px">
+    <input type="checkbox" id="pvis" style="width:auto"> Mostrar o browser a trabalhar (só Wallapop/Segunda Mão)
+  </label>
+  <button class="btn bp" onclick="doPublish()" id="pbtn">🚀 Publicar agora</button>
   <div class="stitle" style="margin-top:20px">Histórico</div>
   <div id="phist"><div class="empty"><div class="eic">📋</div>Sem publicações</div></div>
 </div>
@@ -809,12 +820,51 @@ function fillF(d){
   document.getElementById('fp').value='';
   const sel=document.getElementById('fcat');
   for(const o of sel.options)if(o.text===d.categoria){sel.value=o.value;break;}
+  // Preencher termo e caminho de categoria Vinted gerados pela IA
+  if(d.vinted_category_id&&d.vinted_category_path){
+    pickCat(d.vinted_category_id, (d.vinted_category_path.split('>').pop()||'').trim(), d.vinted_category_path);
+  }
   aiD._d={geral:d.descricao_geral||'',vinted:d.descricao_vinted||'',olx:d.descricao_olx||'',wallapop:d.descricao_wallapop||'',ebay:d.descricao_ebay||''};
   descKey='geral';document.getElementById('fdesc').value=aiD._d.geral;
   document.querySelectorAll('.dtab').forEach((t,i)=>t.className='dtab'+(i===0?' active':''));
   tags=d.tags||[];rTags();
   document.getElementById('aihook').textContent=d.hook||'';
   document.getElementById('ainote').textContent=d.notas_vendedor||'';
+}
+
+let catTimer=null;
+async function searchCat(q){
+  clearTimeout(catTimer);
+  const box=document.getElementById('catresults');
+  if(!q||q.length<2){box.style.display='none';return;}
+  catTimer=setTimeout(async()=>{
+    try{
+      const d=await(await fetch('/api/vinted/categories?q='+encodeURIComponent(q))).json();
+      const res=d.results||[];
+      if(!res.length){box.innerHTML='<div style="padding:10px;font-size:12px;color:var(--text2)">Sem resultados</div>';box.style.display='block';return;}
+      box.innerHTML=res.map(c=>{
+        const parts=c.p.split('>');
+        const name=parts[parts.length-1];
+        const trail=parts.slice(0,-1).join(' > ');
+        return '<div onclick=\'pickCat('+c.i+',"'+name.replace(/"/g,'')+'","'+c.p.replace(/"/g,'')+'")\' style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border)" onmouseover="this.style.background=\'var(--lgray)\'" onmouseout="this.style.background=\'#fff\'"><div style="font-size:13px;font-weight:500">'+name+'</div><div style="font-size:11px;color:var(--text2)">'+trail+'</div></div>';
+      }).join('');
+      box.style.display='block';
+    }catch(e){}
+  },250);
+}
+function pickCat(id,name,path){
+  document.getElementById('fcatid').value=id;
+  document.getElementById('fcatpath').value=path;
+  document.getElementById('fcatterm').value=name;
+  document.getElementById('fcatsearch').value='';
+  document.getElementById('catresults').style.display='none';
+  const sel=document.getElementById('catselected');
+  sel.style.display='block';
+  sel.innerHTML='✓ <b>'+name+'</b> &nbsp;<span style="color:var(--text2)">'+path+'</span> &nbsp;<a href="#" onclick="clearCat();return false" style="color:var(--red)">✕</a>';
+}
+function clearCat(){
+  ['fcatid','fcatpath','fcatterm'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('catselected').style.display='none';
 }
 
 function sdesc(k,btn){
@@ -846,6 +896,7 @@ function manualFill(){
   ['ft','fb','fp','fsize','fmaterial','fdesc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('fqty').value='1';
   document.getElementById('floc').value='Porto';
+  clearCat();
   descKey='geral';
   rTags();
   setStep(3);
@@ -874,6 +925,7 @@ async function saveL(){
     size:gv('fsize'),color:gv('fcolor'),material:gv('fmaterial'),
     quantity:gv('fqty'),package_type:gv('fpackage'),exclusivity:gv('fexcl'),
     shipping_payer:gv('fship'),
+    vinted_category_term:gv('fcatterm'),vinted_category_path:gv('fcatpath'),vinted_category_id:parseInt(gv('fcatid'))||0,
     images:photos.map(p=>p.prev),sku:'',status:'draft',platforms:{},
     ai_hook:document.getElementById('aihook').textContent||''};
   await fetch('/api/listings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
@@ -921,7 +973,7 @@ async function doPublish(){
   const plats=Object.entries(tog).filter(([,v])=>v).map(([k])=>k);
   if(!plats.length){alert('Activa pelo menos uma plataforma');return;}
   const btn=document.getElementById('pbtn');btn.disabled=true;btn.innerHTML='<span class="sp"></span>A publicar...';
-  await fetch('/api/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({listing_id:lid,platforms:plats,headless:!document.getElementById('pvis').checked})});
+  await fetch('/api/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({listing_id:lid,platforms:plats,headless:!document.getElementById('pvis').checked,as_draft:document.getElementById('pdraft').checked})});
   btn.disabled=false;btn.innerHTML='🚀 Publicar agora em todos';
   pollJ();
 }
