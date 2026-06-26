@@ -49,6 +49,7 @@ class Listing(BaseModel):
     descriptions: dict = {}; ai_hook: str = ""
     size: str = ""; color: str = ""; material: str = ""; quantity: str = "1"
     package_type: str = ""; exclusivity: str = ""; shipping_payer: str = "Comprador"
+    vinted_category_term: str = ""; vinted_category_path: str = ""; vinted_category_id: int = 0
     image_paths: list[str] = []; drive_file_ids: list[str] = []
     drive_file_id: str = ""; folder_path: str = ""; imported_from: str = ""
 
@@ -97,7 +98,7 @@ async def save_creds(data: dict):
 
 # ── Publisher (com Playwright headless) ───────────────────────────────────────
 class PublishRequest(BaseModel):
-    listing_id: str; platforms: list[str]; headless: bool = True
+    listing_id: str; platforms: list[str]; headless: bool = True; as_draft: bool = True
 
 @app.post("/api/publish")
 async def publish(req: PublishRequest):
@@ -114,11 +115,35 @@ async def publish(req: PublishRequest):
 
 async def _run_publish(req: PublishRequest, listing_data: dict, log_entry: dict):
     creds = json.loads(CREDS_FILE.read_text()) if CREDS_FILE.exists() else {}
-    from playwright.async_api import async_playwright
     import random, re
 
     for platform in req.platforms:
         plat_creds = creds.get(platform, {})
+
+        # ── VINTED: API directa (sem Playwright) ──────────────────────────
+        if platform == "vinted":
+            cookie = plat_creds.get("session_cookie", "")
+            if not cookie:
+                log_entry["results"]["vinted"] = {"success": False,
+                    "error": "Sem session cookie — cola o cookie em Contas → Vinted"}
+                continue
+            try:
+                import vinted_api
+                # as_draft=True para teste seguro; muda para False para publicar a sério
+                as_draft = getattr(req, "as_draft", True)
+                res = await vinted_api.publish_to_vinted(listing_data, cookie, as_draft=as_draft)
+                log_entry["results"]["vinted"] = res
+                if res.get("success"):
+                    print(f"[publish] OK: vinted — {res.get('url','')}")
+                else:
+                    print(f"[publish] ERRO: vinted — {res.get('error','')}")
+            except Exception as e:
+                print(f"[publish:vinted] EXCEPÇÃO: {e}")
+                log_entry["results"]["vinted"] = {"success": False, "error": str(e)[:300]}
+            continue
+
+        # ── OUTRAS PLATAFORMAS: Playwright ────────────────────────────────
+        from playwright.async_api import async_playwright
         email    = plat_creds.get("email", "")
         password = plat_creds.get("password", "")
         if not email or not password:
@@ -138,7 +163,6 @@ async def _run_publish(req: PublishRequest, listing_data: dict, log_entry: dict)
                     user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36",
                     locale="pt-PT"
                 )
-                # Tentar restaurar sessão
                 sess_file = SESS / f"{platform}_session.json"
                 if sess_file.exists():
                     await ctx.add_cookies(json.loads(sess_file.read_text()))
@@ -147,14 +171,11 @@ async def _run_publish(req: PublishRequest, listing_data: dict, log_entry: dict)
                 await page.add_init_script("Object.defineProperty(navigator,'webdriver',{get:()=>undefined})")
 
                 url = None
-                if platform == "vinted":
-                    url = await _publish_vinted(page, listing_data, email, password, ctx)
-                elif platform == "wallapop":
+                if platform == "wallapop":
                     url = await _publish_wallapop(page, listing_data, email, password)
                 elif platform == "segunda":
                     url = await _publish_segunda(page, listing_data, email, password)
 
-                # Guardar sessão
                 cookies = await ctx.cookies()
                 sess_file.write_text(json.dumps(cookies))
                 await browser.close()
@@ -284,10 +305,39 @@ async def _publish_vinted(page, l, email, password, ctx):
     except Exception as e:
         print(f"[vinted] erro ao listar campos: {e}")
 
-    # Título
+    # Upload de FOTO (obrigatório no Vinted)
+    if l.get("image_paths") or l.get("images"):
+        try:
+            # Converter imagens base64 em ficheiros temporários
+            import tempfile, base64 as b64lib
+            tmp_files = []
+            imgs = l.get("images", [])
+            for idx, img in enumerate(imgs[:5]):
+                if img.startswith("data:"):
+                    header, b64data = img.split(",", 1)
+                    ext = "jpg"
+                    if "png" in header: ext = "png"
+                    elif "webp" in header: ext = "webp"
+                    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=f".{ext}")
+                    tmp.write(b64lib.b64decode(b64data))
+                    tmp.close()
+                    tmp_files.append(tmp.name)
+            if tmp_files:
+                file_input = await page.query_selector('input[type="file"]')
+                if file_input:
+                    await file_input.set_input_files(tmp_files)
+                    print(f"[vinted] ✓ {len(tmp_files)} foto(s) carregada(s)")
+                    await asyncio.sleep(4)
+                else:
+                    print("[vinted] ✗ input de ficheiro não encontrado")
+        except Exception as e:
+            print(f"[vinted] erro upload foto: {e}")
+
+    # Título — estrutura real: data-testid="title" com input aninhado
     title_ok = False
-    for sel in ['[data-testid="item-title-input"]','input[name="title"]','#title',
-                'input[placeholder*="título" i]','input[placeholder*="title" i]']:
+    for sel in ['[data-testid="title"] input','[data-testid="title--input"]',
+                'input[data-testid="title"]','[data-testid="title"] textarea',
+                'input[name="title"]','#title']:
         try:
             await _human_type(page, sel, l["title"])
             print(f"[vinted] ✓ título preenchido via: {sel}")
@@ -297,10 +347,11 @@ async def _publish_vinted(page, l, email, password, ctx):
     if not title_ok:
         print("[vinted] ✗ FALHOU no campo título")
 
-    # Descrição
+    # Descrição — data-testid="description" com textarea aninhado
     desc_ok = False
-    for sel in ['[data-testid="item-description-input"]','textarea[name="description"]','#description',
-                'textarea[placeholder*="descri" i]','textarea']:
+    for sel in ['[data-testid="description"] textarea','[data-testid="description--input"]',
+                'textarea[data-testid="description"]','[data-testid="description"] input',
+                'textarea[name="description"]','#description']:
         try:
             await _human_type(page, sel, l.get("description",""))
             print(f"[vinted] ✓ descrição preenchida via: {sel}")
@@ -310,10 +361,86 @@ async def _publish_vinted(page, l, email, password, ctx):
     if not desc_ok:
         print("[vinted] ✗ FALHOU no campo descrição")
 
-    # Preço
+    # CATEGORIA (obrigatória) — usar ID exacto quando disponível
+    cat_id = l.get("vinted_category_id", 0)
+    cat_path = l.get("vinted_category_path", "")  # ex: "Sports > Cycling > Bike parts > Brakes"
+    # Termo de pesquisa = último nível do path (o título exacto da categoria)
+    if cat_path:
+        cat_term = cat_path.split(">")[-1].strip()
+    else:
+        cat_term = l.get("vinted_category_term", "") or l.get("category", "")
+    print(f"[vinted] categoria alvo: id={cat_id} term='{cat_term}' path='{cat_path}'")
+    try:
+        # 1. Abrir o selector de categoria
+        opened = False
+        for sel in ['[data-testid="catalog-select-dropdown-input"]',
+                    'div:has-text("Select a category")',
+                    '[data-testid="catalog-select"]',
+                    'text="Select a category"']:
+            try:
+                await page.click(sel, timeout=3000)
+                opened = True
+                print(f"[vinted] ✓ categoria aberta via: {sel}")
+                await asyncio.sleep(1.5)
+                break
+            except: pass
+
+        if opened and cat_term:
+            # 2. Escrever no campo de pesquisa "Find a category"
+            search_sels = ['input[placeholder*="Find a category" i]',
+                           'input[placeholder*="Find" i]',
+                           '[data-testid="catalog-search-input"]',
+                           '.web_ui__Input__input input']
+            searched = False
+            for sel in search_sels:
+                try:
+                    await _human_type(page, sel, cat_term)
+                    print(f"[vinted] ✓ pesquisa categoria '{cat_term}' via: {sel}")
+                    searched = True
+                    await asyncio.sleep(2)
+                    break
+                except: pass
+
+            if searched:
+                # 3. Seleccionar o resultado que bate com o caminho completo
+                try:
+                    # Procurar o resultado cujo path corresponde e clicar no seu radio
+                    full_path_parts = [p.strip() for p in cat_path.split(">") if p.strip()] if cat_path else []
+                    parent_hint = full_path_parts[-2] if len(full_path_parts) >= 2 else ""
+
+                    clicked = await page.evaluate("""(args) => {
+                        const [term, parentHint] = args;
+                        // Cada resultado tem título + breadcrumb do path
+                        const rows = Array.from(document.querySelectorAll('[class*="Cell"], li, [role="option"]'));
+                        for (const row of rows) {
+                            const txt = (row.innerText || '').toLowerCase();
+                            // tem de conter o termo E (se houver) a dica do pai
+                            if (txt.includes(term.toLowerCase())) {
+                                if (!parentHint || txt.includes(parentHint.toLowerCase())) {
+                                    // clicar no radio/círculo ou na própria linha
+                                    const radio = row.querySelector('input[type="radio"], [class*="Radio"], [role="radio"]');
+                                    (radio || row).click();
+                                    return txt.slice(0, 80);
+                                }
+                            }
+                        }
+                        return null;
+                    }""", [cat_term, parent_hint])
+
+                    print(f"[vinted] categoria clicada: {clicked}")
+                    await asyncio.sleep(1.5)
+                except Exception as e:
+                    print(f"[vinted] erro ao seleccionar categoria: {e}")
+        else:
+            print("[vinted] ⚠ categoria não aberta ou sem termo de pesquisa")
+    except Exception as e:
+        print(f"[vinted] erro categoria: {e}")
+
+    # Preço — data-testid="price-input" ou aninhado
     price_ok = False
-    for sel in ['[data-testid="item-price-input"]','input[name="price"]','#price',
-                'input[placeholder*="preço" i]','input[placeholder*="price" i]','input[type="number"]']:
+    for sel in ['[data-testid="price-input"] input','[data-testid="price"] input',
+                'input[data-testid="price-input"]','input[name="price"]','#price',
+                'input[type="number"]']:
         try:
             await _human_type(page, sel, str(l["price"]))
             print(f"[vinted] ✓ preço preenchido via: {sel}")
@@ -327,7 +454,8 @@ async def _publish_vinted(page, l, email, password, ctx):
 
     # Submeter
     submit_ok = False
-    for sel in ['[data-testid="submit-item-button"]','button[type="submit"]',
+    for sel in ['[data-testid="upload-form-submit-button"]','[data-testid="submit-item-button"]',
+                'button[type="submit"]',
                 'button:has-text("Publicar")','button:has-text("Upload item")',
                 'button:has-text("Adicionar")','button:has-text("Enviar")']:
         try:
@@ -570,7 +698,7 @@ async def analyze_photo(req: AnalyzeRequest):
         b64 = base64.standard_b64encode(img_bytes).decode()
         PROMPT = """És um vendedor experiente em marketplaces portugueses. Analisa esta foto e cria uma listagem completa.
 Responde APENAS em JSON válido sem markdown.
-{"titulo":"título curto e directo (max 60 chars)","marca":"marca do produto","categoria":"Componentes mobilidade","condicao":"good","descricao_vinted":"desc casual 120-150 chars com 1-2 emojis","descricao_olx":"desc profissional 150-200 chars","descricao_wallapop":"desc directa 100-130 chars","descricao_ebay":"desc técnica em inglês 200-250 chars","descricao_geral":"desc completa 200-300 chars","tags":["tag1","tag2","tag3","tag4","tag5"],"hook":"frase apelativa de vendedor experiente max 80 chars","notas_vendedor":"2-3 dicas rápidas para vender melhor","condicao_visual":"observação sobre o estado na foto"}"""
+{"titulo":"título curto e directo (max 60 chars)","marca":"marca do produto","categoria":"Componentes mobilidade","vinted_category_term":"termo curto em INGLÊS para pesquisar a categoria no Vinted, ex: brakes, motor, wheel, jacket","vinted_category_path":"caminho esperado no Vinted em inglês, ex: Sports > Cycling","condicao":"good","descricao_vinted":"desc casual 120-150 chars com 1-2 emojis","descricao_olx":"desc profissional 150-200 chars","descricao_wallapop":"desc directa 100-130 chars","descricao_ebay":"desc técnica em inglês 200-250 chars","descricao_geral":"desc completa 200-300 chars","tags":["tag1","tag2","tag3","tag4","tag5"],"hook":"frase apelativa de vendedor experiente max 80 chars","notas_vendedor":"2-3 dicas rápidas para vender melhor","condicao_visual":"observação sobre o estado na foto"}"""
         msg = client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=1200,
@@ -581,7 +709,33 @@ Responde APENAS em JSON válido sem markdown.
         )
         raw = msg.content[0].text
         clean = re.sub(r"```json|```","",raw).strip()
-        return json.loads(clean)
+        result = json.loads(clean)
+        # Mapear termo de categoria → ID real do Vinted
+        try:
+            cats = _load_vinted_cats()
+            term = (result.get("vinted_category_term","") or "").lower()
+            path_hint = (result.get("vinted_category_path","") or "").lower()
+            if term:
+                best = None
+                for c in cats:
+                    tl = c["title"].lower()
+                    if tl == term:  # match exacto do título
+                        # preferir o que bate com o path_hint
+                        if path_hint and path_hint.split(">")[0].strip() in c["path"].lower():
+                            best = c; break
+                        if best is None:
+                            best = c
+                if not best:  # match parcial
+                    for c in cats:
+                        if term in c["title"].lower():
+                            best = c; break
+                if best:
+                    result["vinted_category_id"] = best["id"]
+                    result["vinted_category_path"] = best["path"]
+                    print(f"[ai] categoria mapeada: {term} → {best['id']} ({best['path']})")
+        except Exception as e:
+            print(f"[ai] erro mapeamento categoria: {e}")
+        return result
     except HTTPException:
         raise
     except Exception as e:
@@ -1140,3 +1294,41 @@ async def archive_drive_file(file_id: str):
     ok = await asyncio.get_event_loop().run_in_executor(
         None, lambda: ds.move_to_archived(file_id))
     return {"ok": ok}
+
+# ════════════════════════════════════════════════════════
+# CATEGORIAS VINTED (árvore completa — 2920 categorias)
+# ════════════════════════════════════════════════════════
+_vinted_cats = None
+
+def _load_vinted_cats():
+    global _vinted_cats
+    if _vinted_cats is None:
+        try:
+            _vinted_cats = json.loads((BASE / "vinted_categories.json").read_text())
+        except Exception:
+            _vinted_cats = []
+    return _vinted_cats
+
+@app.get("/api/vinted/categories")
+async def vinted_categories(q: str = ""):
+    """Pesquisa nas categorias Vinted. Devolve até 30 resultados."""
+    cats = _load_vinted_cats()
+    if not q:
+        # Devolver só as de topo + ciclismo por defeito
+        return {"results": [c for c in cats if c["path"].count(">") <= 1][:50]}
+    ql = q.lower()
+    matches = []
+    for c in cats:
+        if ql in c["title"].lower() or ql in c["path"].lower():
+            matches.append(c)
+            if len(matches) >= 30:
+                break
+    return {"results": matches}
+
+@app.get("/api/vinted/category/{cat_id}")
+async def vinted_category_by_id(cat_id: int):
+    cats = _load_vinted_cats()
+    for c in cats:
+        if c["id"] == cat_id:
+            return c
+    raise HTTPException(404, "Categoria não encontrada")
