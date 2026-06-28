@@ -833,6 +833,7 @@ function fillF(d){
 }
 
 let catTimer=null;
+let catResultsData=[];
 async function searchCat(q){
   clearTimeout(catTimer);
   const box=document.getElementById('catresults');
@@ -840,17 +841,30 @@ async function searchCat(q){
   catTimer=setTimeout(async()=>{
     try{
       const d=await(await fetch('/api/vinted/categories?q='+encodeURIComponent(q))).json();
-      const res=d.results||[];
-      if(!res.length){box.innerHTML='<div style="padding:10px;font-size:12px;color:var(--text2)">Sem resultados</div>';box.style.display='block';return;}
-      box.innerHTML=res.map(c=>{
+      catResultsData=d.results||[];
+      if(!catResultsData.length){box.innerHTML='<div style="padding:10px;font-size:12px;color:var(--text2)">Sem resultados</div>';box.style.display='block';return;}
+      box.innerHTML='';
+      catResultsData.forEach((c,idx)=>{
         const parts=c.p.split('>');
         const name=parts[parts.length-1];
         const trail=parts.slice(0,-1).join(' > ');
-        return '<div onclick=\'pickCat('+c.i+',"'+name.replace(/"/g,'')+'","'+c.p.replace(/"/g,'')+'")\' style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border)" onmouseover="this.style.background=\'var(--lgray)\'" onmouseout="this.style.background=\'#fff\'"><div style="font-size:13px;font-weight:500">'+name+'</div><div style="font-size:11px;color:var(--text2)">'+trail+'</div></div>';
-      }).join('');
+        const div=document.createElement('div');
+        div.style.cssText='padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border)';
+        div.onmouseover=()=>div.style.background='var(--lgray)';
+        div.onmouseout=()=>div.style.background='#fff';
+        div.onclick=()=>pickCatByIdx(idx);
+        div.innerHTML='<div style="font-size:13px;font-weight:500">'+name+'</div><div style="font-size:11px;color:var(--text2)">'+trail+'</div>';
+        box.appendChild(div);
+      });
       box.style.display='block';
     }catch(e){}
   },250);
+}
+function pickCatByIdx(idx){
+  const c=catResultsData[idx];
+  if(!c)return;
+  const parts=c.p.split('>');
+  pickCat(c.i, parts[parts.length-1].trim(), c.p);
 }
 function pickCat(id,name,path){
   document.getElementById('fcatid').value=id;
@@ -860,11 +874,11 @@ function pickCat(id,name,path){
   document.getElementById('catresults').style.display='none';
   const sel=document.getElementById('catselected');
   sel.style.display='block';
-  sel.innerHTML='✓ <b>'+name+'</b> &nbsp;<span style="color:var(--text2)">'+path+'</span> &nbsp;<a href="#" onclick="clearCat();return false" style="color:var(--red)">✕</a>';
+  sel.innerHTML='✓ <b>'+name+'</b> &nbsp;<span style="color:var(--text2)">'+path+'</span>';
 }
 function clearCat(){
-  ['fcatid','fcatpath','fcatterm'].forEach(i=>document.getElementById(i).value='');
-  document.getElementById('catselected').style.display='none';
+  ['fcatid','fcatpath','fcatterm'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});
+  const s=document.getElementById('catselected');if(s)s.style.display='none';
 }
 
 function sdesc(k,btn){
